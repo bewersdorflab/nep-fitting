@@ -1,2 +1,2 @@
-nep_fitting.dsviewer_modules.line_profile_overlay
+nep_fitting.dsviewer_modules.sted_psf_fitting
 nep_fitting.dsviewer_modules.roi_manager

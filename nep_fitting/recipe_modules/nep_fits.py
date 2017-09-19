@@ -59,6 +59,18 @@ class TestEnsembleParameters(ModuleBase):
                     Item('ensemble_test_values'),
                     Item(''),
                     Item('outputName'), buttons=['OK'])
+    
+    @property
+    def pipeline_view(self):
+        from traitsui.api import View, Item
+        from PYME.ui.custom_traits_editors import CBEditor
+    
+        return View(
+                    Item('fit_type', editor=CBEditor(choices=self._fitter_choices)),
+                    Item('_'),
+                    Item(''),
+                    Item('ensemble_test_values'),
+                    )
 
 @register_module('EnsembleFitProfiles')
 class EnsembleFitProfiles(ModuleBase):
@@ -116,6 +128,18 @@ class EnsembleFitProfiles(ModuleBase):
                     Item('hold_ensemble_parameter_constant'),
                     Item('_'),
                     Item('outputName'), buttons=['OK'])
+
+    @property
+    def pipeline_view(self):
+        from traitsui.api import View, Item
+        from PYME.ui.custom_traits_editors import CBEditor
+    
+        return View(Item('fit_type', editor=CBEditor(choices=self._fitter_choices)),
+                    Item('_'),
+                    Item('ensemble_parameter_guess'),
+                    Item('_'),
+                    Item('hold_ensemble_parameter_constant'),
+                    )
 
     @property
     def dsview_view(self):
@@ -177,6 +201,15 @@ class FitProfiles(ModuleBase):
                     Item('_'),
                     Item('outputName'), buttons=['OK'])
 
+    @property
+    def pipeline_view(self):
+        from traitsui.api import View, Item
+        from PYME.ui.custom_traits_editors import CBEditor
+    
+        return View(
+                    Item('fit_type', editor=CBEditor(choices=self._fitter_choices)),
+                    )
+
 @register_module('EnsembleFitROIs')
 class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved somewhere else
     inputName = Input('ROIs')
@@ -233,6 +266,19 @@ class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved so
                     Item('hold_ensemble_parameter_constant'),
                     Item('_'),
                     Item('outputName'), buttons=['OK'])
+
+    @property
+    def pipeline_view(self):
+        from traitsui.api import View, Item
+        from PYME.ui.custom_traits_editors import CBEditor
+    
+        return View(
+                    Item('fit_type', editor=CBEditor(choices=self._fitter_choices)),
+                    Item('_'),
+                    Item('ensemble_parameter_guess'),
+                    Item('_'),
+                    Item('hold_ensemble_parameter_constant'),
+                    )
 
     @property
     def dsview_view(self):
