@@ -23,22 +23,7 @@ build:
   entry_points:
     # This creates an entry point named bsdiff4 that calls
     # bsdiff4.cli.main_bsdiff4()
-    - dh5view = PYME.DSView.dsviewer:main
-    - PYMEAcquire = PYME.Acquire.PYMEAcquire:main
-    - VisGUI = PYME.LMVis.VisGUI:main
-    - launchWorkers = PYME.ParallelTasks.launchWorkers:main
-    - PYMEBatch = PYME.recipes.batchProcess:main
-    - bakeshop = PYME.recipes.bakeshop:main
-    - fitMonP = PYME.ParallelTasks.fitMonP:main
-    - taskWorkerZC = PYME.ParallelTasks.taskWorkerZC:main
-    - taskServerZC = PYME.ParallelTasks.taskServerZC:main
-    - PYMEDataServer = PYME.ParallelTasks.HTTPDataServer:main
-    - PYMEClusterDup = PYME.io.clusterDuplication:main
-    - PYMEDistributor = PYME.ParallelTasks.PYMEDistributor:main
-    - PYMEscmosmapgen = PYME.Analysis.gen_sCMOS_maps:main
-    - PYMENodeServer = PYME.ParallelTasks.PYMENodeServer:main
-
-
+    - STEDFitter = nep_fitting.STEDFitter:main
 
     #- bspatch4 = bsdiff4.cli:main_bspatch4
 
