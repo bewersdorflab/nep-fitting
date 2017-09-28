@@ -8,9 +8,9 @@ def main():
 
     try:
         if sys.argv[1] == 'dist':
-            copy_tree(os.path.join(this_dir, '..', 'etc', 'PYME'), config.dist_config_directory)
+            copy_tree(os.path.abspath(os.path.join(this_dir, os.pardir, 'etc', 'PYME')), config.dist_config_directory)
     except IndexError:  # no argument provided, default to user config directory
-        copy_tree(os.path.join(this_dir, '..', 'etc', 'PYME'), config.user_config_dir)
+        copy_tree(os.path.abspath(os.path.join(this_dir, os.pardir, 'etc', 'PYME')), config.user_config_dir)
 
 if __name__ == '__main__':
     main()
