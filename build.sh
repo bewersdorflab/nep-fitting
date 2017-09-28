@@ -7,7 +7,7 @@ $PYTHON setup.py install
 
 echo "Trying to install as PYME plugin"
 
-$PYTHON install_plugin.py
+$PYTHON install_plugin.py dist
 
 
 # See
