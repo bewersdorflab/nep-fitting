@@ -74,66 +74,103 @@ class LineProfilesOverlay:
         This method generates the panel to control the parameters of the overlay.
         :param _pnl: parent panel
         """
-        item = afp.foldingPane(_pnl, -1, caption="MultilineSelection", pinned=True)
+        item = afp.foldingPane(_pnl, -1, caption="Line Profile Selection", pinned=True)
         pan = wx.Panel(item, -1)
         v_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        #v_sizer.Add(wx.StaticText(''))
 
-        btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=3, vgap=2)
-        add_btn = wx.Button(pan, -1, label='Add')
-        btn_sizer.Add(add_btn, 0, wx.EXPAND)
-        add_btn.Bind(wx.EVT_BUTTON, lambda e: self._add_line())
-        del_btn = wx.Button(pan, -1, label='Delete')
-        btn_sizer.Add(del_btn, 0, wx.EXPAND)
-        del_btn.Bind(wx.EVT_BUTTON, lambda e: self._list_control.delete_line_profile())
-
-        visibility_btn = wx.Button(pan, -1, label='Visibility')
-        btn_sizer.Add(visibility_btn, 0, wx.EXPAND)
-        visibility_btn.Bind(wx.EVT_BUTTON, lambda e: self._list_control.change_visibility())
-
-        relabel_btn = wx.Button(pan, -1, label='Relabel')
-        btn_sizer.Add(relabel_btn, 0, wx.EXPAND)
-        relabel_btn.Bind(wx.EVT_BUTTON, lambda e: self._line_profile_handler.relabel_line_profiles())
-
-        fit_btn = wx.Button(pan, -1, label='Fit')
-        btn_sizer.Add(fit_btn, 0, wx.EXPAND)
-        fit_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_fit())
-
-        ensemble_btn = wx.Button(pan, -1, label='Ensemble Fit')
-        btn_sizer.Add(ensemble_btn, 0, wx.EXPAND)
-        ensemble_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_ensemble_fit())
-
-        ensemble_test_btn = wx.Button(pan, -1, label='Test Ensemble Values')
-        btn_sizer.Add(ensemble_test_btn, 0, wx.EXPAND)
-        ensemble_test_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_ensemble_test())
-
-        v_sizer.Add(btn_sizer)
         h_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         h_sizer.Add(wx.StaticText(pan, -1, 'Line width:'))
         width_control = wx.TextCtrl(pan, -1, name='Line width',
                                     value=str(self._line_profile_handler.get_line_profile_width()))
         width_control.Bind(wx.EVT_KEY_UP, self._on_width_change)
-        h_sizer.Add(width_control)
-        v_sizer.Add(h_sizer)
+        h_sizer.Add(width_control, 1, wx.EXPAND, 0)
+        h_sizer.Add(wx.StaticText(pan, -1, 'px'))
+        v_sizer.Add(h_sizer, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 2)
+
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)#wx.GridSizer(rows=1, cols=3, hgap=3, vgap=2)
+        add_btn = wx.Button(pan, -1, label='Add', style=wx.BU_EXACTFIT)
+        add_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_TOOLBAR, (16,16)))
+        add_btn.SetToolTipString('Add a profile corresponding to the current selection')
+        btn_sizer.Add(add_btn, 0, wx.EXPAND)
+        add_btn.Bind(wx.EVT_BUTTON, lambda e: self._add_line())
+        del_btn = wx.Button(pan, -1, label='Delete', style=wx.BU_EXACTFIT)
+        del_btn.SetToolTipString('Delete the currently selected profile(s)')
+        del_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_MINUS, wx.ART_TOOLBAR, (16,16)))
+        btn_sizer.Add(del_btn, 0, wx.EXPAND)
+        del_btn.Bind(wx.EVT_BUTTON, lambda e: self._list_control.delete_line_profile())
+
+        visibility_btn = wx.Button(pan, -1, label='S/H', style=wx.BU_EXACTFIT)
+        visibility_btn.SetToolTipString('Toggle the visibility of the selected profiles')
+        btn_sizer.Add(visibility_btn, 0, wx.EXPAND)
+        visibility_btn.Bind(wx.EVT_BUTTON, lambda e: self._list_control.change_visibility())
+
+        # relabel_btn = wx.Button(pan, -1, label='Relabel')
+        # btn_sizer.Add(relabel_btn, 0, wx.EXPAND)
+        #relabel_btn.Bind(wx.EVT_BUTTON, lambda e: self._line_profile_handler.relabel_line_profiles())
+
+        
+
+        v_sizer.Add(btn_sizer, 0, wx.EXPAND|wx.TOP, 10)
+        
 
         self._list_control = LineProfileList(self._line_profile_handler, pan, -1, size=(-1, 300),
-                                             style=wx.LC_REPORT | wx.BORDER_SUNKEN,
                                              name='Line profiles')
-        v_sizer.Add(self._list_control)
+        v_sizer.Add(self._list_control, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 2)
 
 
         bottom_btn_sizer = wx.GridSizer(rows=1, cols=2, hgap=3, vgap=2)
 
         save_btn = wx.Button(pan, -1, label='Save')
+        save_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, (16,16)))
         bottom_btn_sizer.Add(save_btn, 0, wx.EXPAND)
         save_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_save())
 
         load_btn = wx.Button(pan, -1, label='Load')
+        load_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, (16,16)))
         bottom_btn_sizer.Add(load_btn, 0, wx.EXPAND)
         load_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_load())
 
         v_sizer.Add(bottom_btn_sizer)
 
+        pan.SetSizerAndFit(v_sizer)
+        pan.Layout()
+        item.AddNewElement(pan)
+        _pnl.AddPane(item)
+
+        item = afp.foldingPane(_pnl, -1, caption="Independent Profile Fitting", pinned=True)
+        pan = wx.Panel(item, -1)
+        v_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        fit_btn = wx.Button(pan, -1, label='Fit Profiles')
+        v_sizer.Add(fit_btn, 0, wx.EXPAND|wx.ALL, 2)
+        fit_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_fit())
+
+        pan.SetSizerAndFit(v_sizer)
+        pan.Layout()
+        item.AddNewElement(pan)
+        _pnl.AddPane(item)
+
+        item = afp.foldingPane(_pnl, -1, caption="Ensemble Profile Fitting", pinned=True)
+        pan = wx.Panel(item, -1)
+        v_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        #btn_sizer = wx.GridSizer(rows=2, cols=2, hgap=3, vgap=2)
+
+        
+
+        ensemble_btn = wx.Button(pan, -1, label='Ensemble Fit Profiles')
+        v_sizer.Add(ensemble_btn, 0, wx.EXPAND|wx.ALL, 2)
+        ensemble_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_ensemble_fit())
+
+        ensemble_test_btn = wx.Button(pan, -1, label='Test Ensemble Values')
+        v_sizer.Add(ensemble_test_btn, 0, wx.EXPAND|wx.ALL, 2)
+        ensemble_test_btn.Bind(wx.EVT_BUTTON, lambda e: self._on_ensemble_test())
+
+        #v_sizer.Add(btn_sizer)
+        
         pan.SetSizerAndFit(v_sizer)
         pan.Layout()
         item.AddNewElement(pan)
@@ -334,28 +371,46 @@ class LineProfileList(wx.ListCtrl):
         args : parameters of wx.ListCtr
         kwargs : parameters of wx.ListCtr
         """
-        super(LineProfileList, self).__init__(*args, **kwargs)
+        super(LineProfileList, self).__init__(*args, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_VIRTUAL|wx.LC_VRULES, **kwargs)
         self._line_profile_handler = line_profile_handler
 
-        self.InsertColumn(0, "Line profile", width=self.Size[1])
+        self.InsertColumn(0, "Profile", width=120)
+        self.InsertColumn(1, "Visible", width=50)
         LineProfileHandler.LIST_CHANGED_SIGNAL.connect(self._update_list)
 
     def _update_list(self, sender=None, **kwargs):
         # relist all items in the gui
-        self.DeleteAllItems()
-        self._line_profile_handler.update_names()
-        for line_profile in self._line_profile_handler.get_line_profiles():
-            lp_id = line_profile.get_id()
-            index = self._line_profile_handler._names[lp_id]
-            self.InsertStringItem(index, str(index) + ': ' + str(lp_id))
+        # self.DeleteAllItems()
+        # self._line_profile_handler.update_names()
+        # for line_profile in self._line_profile_handler.get_line_profiles():
+        #     lp_id = line_profile.get_id()
+        #     index = self._line_profile_handler._names[lp_id]
+        #     self.InsertStringItem(index, str(index) + ': ' + str(lp_id))
+        
+        self.SetItemCount(len(self._line_profile_handler.get_line_profiles()))
+        
         self.Update()
         self.Refresh()
+        
+    def OnGetItemText(self, item, col):
+        line_profile = self._line_profile_handler.get_line_profiles()[item]
+        lp_id = line_profile.get_id()
+        index = self._line_profile_handler._names[lp_id]
+        
+        if col == 0:
+            return str(index) + ': ' + str(lp_id)
+        if col == 1:
+            return self._line_profile_handler._visibility_mask[index]
+        else:
+            return ''
 
     def delete_line_profile(self):
         selected_indices = self.get_selected_items()
 
         for line_profile_index in reversed(selected_indices):
             self._line_profile_handler.remove_line_profile(line_profile_index)
+            
+        self._line_profile_handler.relabel_line_profiles()
 
 
     def change_visibility(self):
