@@ -110,6 +110,11 @@ def lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
+def lorentz_convolved_coated_tubule_selflabeling_ne(parameters, distance):
+    amp, d_inner, center, bkgnd, psf_fwhm = parameters
+
+    return lorentz_convolved_coated_tubule_selflabeling(parameters[:-1], distance, psf_fwhm)
+
 def lorentz_convolved_tubule_membrane(p, x, gamma):
     """
     Model function for membrane-labeled tubule imaged with STED. The membrane is assumed to be infinitely thin.
@@ -230,3 +235,25 @@ def lorentz_convolved_tubule_lumen_misfit(p, x, data, gamma):
     modelFunc = lorentz_convolved_tubule_lumen(p, x, gamma)
 
     return (data - modelFunc)
+
+def lorentz_convolved_tubule_lumen_ne(p, x):
+    """
+    Model function for lumen-labeled tubule imaged with STED. The PSF along z is assumed to be larger than the diameter
+    of the tubule.
+
+    Parameters
+    ----------
+    p : array-like
+        list of fit parameters [amplitude, tubule diameter, center position, background]
+    x : array
+        position vector
+
+    Returns
+    -------
+    model : array
+        profile of lumen-labeled tubule, projected and convolved with a Lorentzian
+
+    """
+    a, d, x0, c, psf_fwhm = p
+
+    return lorentz_convolved_tubule_lumen(p[:-1], x, psf_fwhm)
