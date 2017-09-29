@@ -118,10 +118,11 @@ class LineProfileHandler(object):
                     p = profs[i]
                     #print p.__class__
                     #print p
-                    lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'], identifier=t.name.strip('p'))
+                    lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'],
+                                          identifier=p['identifier'])
                     lp._profile = p['profile']
                     lp._distance = p['distance']
-                    self.add_line_profile(lp, defer_update=True)
+                    self.add_line_profile(lp)#, defer_update=True)
                 LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
                 # TODO - check if we need to worry about multiple profiles with the same id
         hdf.close()
