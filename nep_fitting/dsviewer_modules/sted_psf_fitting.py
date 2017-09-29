@@ -400,7 +400,7 @@ class LineProfileList(wx.ListCtrl):
         
     def OnGetItemText(self, item, col):
         """
-        Note that this is overriding the wxListCtrl function.
+        Note that this is overriding the wxListCtrl method as required for wxLC_VIRTUAL style
         Parameters
         ----------
         item : long
