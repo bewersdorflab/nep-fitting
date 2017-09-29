@@ -48,7 +48,7 @@ class LineProfilesOverlay:
         filename = self._image.filename
         self.image_name = filename.split('/')[-1].strip('.' + filename.split('.')[-1])
         # create LineProfileHandler with reference to ImageStack
-        self._line_profile_handler = LineProfileHandler(self._image)
+        self._line_profile_handler = LineProfileHandler(self._image, image_name=self.image_name)
 
         # add this overlay to the overlays to be rendered
         self._do.overlays.append(self.DrawOverlays)
@@ -362,8 +362,6 @@ class LineProfilesOverlay:
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
             self._line_profile_handler.open_line_profiles(fpath)
-            
-        print('here')
 
     def Unplug(self):
         self._do.overlays.remove(self.DrawOverlays)
