@@ -1,16 +1,24 @@
 Installation
 ------------
 
-Nep-fitting is implemented as a pair of plugins for the Python Microscopy Environment (PYME).
+NEP-fitting is implemented as a pair of plugins for the Python Microscopy Environment (PYME).
 
-To install, follow the following steps:
-
-1) Install PYME following the instructions at
+PYME installation instructions can be found at:
 http://www.python-microscopy.org/doc/Installation/InstallationWithAnaconda.html
 
-2) Install the nep-fitting module by running `python setup.py install` in this directory
+NEP-fitting can be installed using anaconda or setuptools.
+To install using anaconda:
 
-3) Register the plugins with PYME by running `python install_plugin.py`
+1) Run 'conda install -c barentine nep-fitting'
+2) Open a python terminal (run 'python') and run 'from nep_fitting import install_plugin'
+3) Close python and test installation by running 'STEDFitter' on the terminal
+
+To install using setuptools:
+
+1) Clone this repository
+2) Run 'python nep-fitting/setup.py install'
+3) Run 'python nep-fitting/nep_fitting/install_plugin.py'
+4) Test installation by running 'dh5view', loading an image, clicking 'modules', and selecting 'sted_psf_fitting' from the drop-down.
 
 Once installed, the nep-fitting functionality is accessible by choosing the 'sted_profile_fitting' module from the
 modules menu within the PYME data viewer (dh5view).

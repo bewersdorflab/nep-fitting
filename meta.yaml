@@ -57,7 +57,7 @@ build:
   # Used instead of build.sh or bld.bat. For short build scripts, this can
   # be more convenient. You may need to use selectors (see below) to use
   # different scripts for different platforms.
-  #script: python setup.py install
+  script: python setup.py install
 
   # Set which RPATHs are used when making executables relocatable. This
   # currently only works on Linux.  The default is lib/
@@ -117,7 +117,7 @@ requirements:
   # Package names should be any valid conda spec (see "Specifying versions
   # in requirements" below).
   run:
-    - python=2.7
+    - python 2.7
     - python-microscopy
 
 
