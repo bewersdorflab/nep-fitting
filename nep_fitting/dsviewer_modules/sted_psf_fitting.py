@@ -399,6 +399,20 @@ class LineProfileList(wx.ListCtrl):
         self.Refresh()
         
     def OnGetItemText(self, item, col):
+        """
+        Note that this is overriding the wxListCtrl function.
+        Parameters
+        ----------
+        item : long
+            wx list item
+        col : long
+            column specifier for wxListCtrl
+
+        Returns
+        -------
+        str : Returns string of column 'col' for item 'item'
+
+        """
         line_profile = self._line_profile_handler.get_line_profiles()[item]
         lp_id = line_profile.get_id()
         index = self._line_profile_handler._names[lp_id]
