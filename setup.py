@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(name='nep_fitting',
-      version='1.2',
+      version='1.0',
       description='Nested Ensemble Resolution Estimation',
       author='Andrew Barentine, Michael Graff, David Baddeley',
       author_email='andrew.barentine@yale.edu',
