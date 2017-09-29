@@ -102,20 +102,25 @@ class LineProfileHandler(object):
 
     def open_line_profiles(self, hdfFile):
         import tables
+        from PYME.IO import ragged
         if type(hdfFile) == tables.file.File:
             hdf = hdfFile
         else:
             hdf = tables.open_file(hdfFile)
 
         for t in hdf.list_nodes('/'):
-            if isinstance(t, tables.table.Table):
-                print(t.name)
-                p = getattr(hdf.root, t.name)[:]
-
-                lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'], identifier=t.name.strip('p'))
-                lp._profile = p['profile']
-                lp._distance = p['distance']
-                self.add_line_profile(lp)
+            #print t.name, t.__class__
+            if isinstance(t, tables.vlarray.VLArray):
+                profs = ragged.RaggedVLArray(hdf, t.name)
+                #print profs[0], profs[0].__class__
+                for i in range(len(profs)):# in profs[:]:
+                    p = profs[i]
+                    #print p.__class__
+                    #print p
+                    lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'], identifier=t.name.strip('p'))
+                    lp._profile = p['profile']
+                    lp._distance = p['distance']
+                    self.add_line_profile(lp)
                 # TODO - check if we need to worry about multiple profiles with the same id
         hdf.close()
 
