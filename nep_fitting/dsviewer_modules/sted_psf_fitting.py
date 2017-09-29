@@ -90,7 +90,7 @@ class LineProfilesOverlay:
         h_sizer.Add(wx.StaticText(pan, -1, 'px'))
         v_sizer.Add(h_sizer, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 2)
 
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)#wx.GridSizer(rows=1, cols=3, hgap=3, vgap=2)
+        btn_sizer = wx.GridSizer(rows=2, cols=2, hgap=3, vgap=2)
         add_btn = wx.Button(pan, -1, label='Add', style=wx.BU_EXACTFIT)
         add_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_TOOLBAR, (16,16)))
         add_btn.SetToolTipString('Add a profile corresponding to the current selection')
@@ -102,8 +102,8 @@ class LineProfilesOverlay:
         btn_sizer.Add(del_btn, 0, wx.EXPAND)
         del_btn.Bind(wx.EVT_BUTTON, lambda e: self._list_control.delete_line_profile())
 
-        visibility_btn = wx.Button(pan, -1, label='S/H', style=wx.BU_EXACTFIT)
-        visibility_btn.SetToolTipString('Toggle the visibility of the selected profiles')
+        visibility_btn = wx.Button(pan, -1, label='Show / Hide', style=wx.BU_EXACTFIT)
+        visibility_btn.SetToolTipString('Toggle the visibility of the selected profile(s)')
         btn_sizer.Add(visibility_btn, 0, wx.EXPAND)
         visibility_btn.Bind(wx.EVT_BUTTON, lambda e: self._list_control.change_visibility())
 
@@ -355,6 +355,14 @@ class LineProfilesOverlay:
 
     def _on_load(self, event=None):
         # TODO fill in this function
+        from PYME.IO.FileUtils import nameUtils
+        fdialog = wx.FileDialog(None, 'Load Line Profiles to ...',
+                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.OPEN)
+        succ = fdialog.ShowModal()
+        if (succ == wx.ID_OK):
+            fpath = fdialog.GetPath()
+            self._line_profile_handler.open_line_profiles(fpath)
+            
         print('here')
 
     def Unplug(self):
