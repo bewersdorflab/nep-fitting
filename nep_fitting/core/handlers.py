@@ -109,6 +109,7 @@ class LineProfileHandler(object):
 
         for t in hdf.list_nodes('/'):
             if isinstance(t, tables.table.Table):
+                print(t.name)
                 p = getattr(hdf.root, t.name)[:]
 
                 lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'], identifier=t.name.strip('p'))
