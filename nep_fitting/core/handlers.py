@@ -13,11 +13,12 @@ logger = logging.getLogger(__name__)
 class LineProfileHandler(object):
     LIST_CHANGED_SIGNAL = dispatch.Signal()
 
-    def __init__(self, image_data=None, interpolation_order=3):
+    def __init__(self, image_data=None, interpolation_order=3, image_name=None):
         self._line_profiles = []
         self._names = {}
         self._visibility_mask = []
         self.image = image_data
+        self.image_name = image_name
         self.interpolation_order = interpolation_order
         self._width = 1.0
         if self.image is not None:
@@ -117,12 +118,15 @@ class LineProfileHandler(object):
                     p = profs[i]
                     #print p.__class__
                     #print p
-                    lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'], identifier=t.name.strip('p'))
+                    lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'],
+                                          identifier=p['identifier'])
                     lp._profile = p['profile']
                     lp._distance = p['distance']
+
                     self.add_line_profile(lp, False)
                     
         LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
+
                 # TODO - check if we need to worry about multiple profiles with the same id
         hdf.close()
 
@@ -167,11 +171,12 @@ class LineProfileHandler(object):
 
             lp._distance = np.linspace(0, dist, lp._profile.shape[0])
 
-    def add_line_profile(self, line_profile, gui=True):
+    def add_line_profile(self, line_profile, update=True):
         self._line_profiles.append(line_profile)
-        self._visibility_mask.append(True)
-        if gui:
+        self._visibility_mask.append(line_profile.get_image_name() == self.image_name)
+        if update:
             LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
+
 
     def remove_line_profile(self, index):
         del self._line_profiles[index]
