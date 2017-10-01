@@ -48,7 +48,7 @@ class LineProfilesOverlay:
         filename = self._image.filename
         self.image_name = filename.split('/')[-1].strip('.' + filename.split('.')[-1])
         # create LineProfileHandler with reference to ImageStack
-        self._line_profile_handler = LineProfileHandler(self._image)
+        self._line_profile_handler = LineProfileHandler(self._image, image_name=self.image_name)
 
         # add this overlay to the overlays to be rendered
         self._do.overlays.append(self.DrawOverlays)
@@ -360,8 +360,6 @@ class LineProfilesOverlay:
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
             self._line_profile_handler.open_line_profiles(fpath)
-            
-        print('here')
 
     def Unplug(self):
         self._do.overlays.remove(self.DrawOverlays)
@@ -399,6 +397,20 @@ class LineProfileList(wx.ListCtrl):
         self.Refresh()
         
     def OnGetItemText(self, item, col):
+        """
+        Note that this is overriding the wxListCtrl method as required for wxLC_VIRTUAL style
+        Parameters
+        ----------
+        item : long
+            wx list item
+        col : long
+            column specifier for wxListCtrl
+
+        Returns
+        -------
+        str : Returns string of column 'col' for item 'item'
+
+        """
         line_profile = self._line_profile_handler.get_line_profiles()[item]
         lp_id = line_profile.get_id()
         index = self._line_profile_handler._names[lp_id]
