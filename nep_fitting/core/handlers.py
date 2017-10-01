@@ -5,7 +5,7 @@ import numpy as np
 from PYME.IO.MetaDataHandler import NestedClassMDHandler
 import dispatch
 
-from . import rois
+from nep_fitting.core import rois
 
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ class LineProfileHandler(object):
             #print t.name, t.__class__
             if isinstance(t, tables.vlarray.VLArray):
                 profs = ragged.RaggedVLArray(hdf, t.name)
-                #print profs[0], profs[0].__class__
+                print profs[0], profs[0].__class__
                 for i in range(len(profs)):# in profs[:]:
                     p = profs[i]
                     #print p.__class__
@@ -120,7 +120,9 @@ class LineProfileHandler(object):
                     lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'], identifier=t.name.strip('p'))
                     lp._profile = p['profile']
                     lp._distance = p['distance']
-                    self.add_line_profile(lp)
+                    self.add_line_profile(lp, False)
+                    
+        LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
                 # TODO - check if we need to worry about multiple profiles with the same id
         hdf.close()
 
@@ -167,8 +169,8 @@ class LineProfileHandler(object):
 
     def add_line_profile(self, line_profile, gui=True):
         self._line_profiles.append(line_profile)
+        self._visibility_mask.append(True)
         if gui:
-            self._visibility_mask.append(True)
             LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
 
     def remove_line_profile(self, index):

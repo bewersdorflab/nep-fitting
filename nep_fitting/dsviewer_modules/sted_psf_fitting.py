@@ -42,7 +42,7 @@ class LineProfilesOverlay:
 
     def __init__(self, dsviewer):
         self._dsviewer = dsviewer
-        self._view = dsviewer.view
+        
         self._do = dsviewer.do
         self._image = dsviewer.image
         filename = self._image.filename
@@ -188,11 +188,20 @@ class LineProfilesOverlay:
         -------
 
         """
-        self._view = view
-        self._dc = dc
-        self._refresh()
+    
+        # draw lines again
+        line_width = self._line_profile_handler.get_line_profile_width()
+        dc.SetPen(wx.Pen(LineProfilesOverlay.PEN_COLOR_LINE, max(view.scale*line_width, 1)))
+        dc.SetTextForeground(LineProfilesOverlay.PEN_COLOR_LABEL)
+        
+        self._line_profile_handler.update_names() #what does this do?
+        
+        for line_profile, visible in zip(self._line_profile_handler.get_line_profiles(),
+                                         self._line_profile_handler.get_visibility_mask()):
+            if visible:
+                self._draw_line(dc, view, line_profile, label=str(self._line_profile_handler._names[line_profile.get_id()]))
 
-    def _draw_line(self, line, label=None):
+    def _draw_line(self, dc, view, line, label=None):
         """
         This method actually draws a line given line on the image.
 
@@ -207,16 +216,17 @@ class LineProfilesOverlay:
         -------
 
         """
-        screen_coordinates_start = self._view._PixelToScreenCoordinates(*line.get_start())
-        screen_coordinates_end = self._view._PixelToScreenCoordinates(*line.get_end())
+        screen_coordinates_start = view._PixelToScreenCoordinates(*line.get_start())
+        screen_coordinates_end = view._PixelToScreenCoordinates(*line.get_end())
 
-        self._dc.DrawLine(screen_coordinates_start[0],
+        dc.DrawLine(screen_coordinates_start[0],
                           screen_coordinates_start[1],
                           screen_coordinates_end[0],
                           screen_coordinates_end[1])
         if label is None:
             label = line.get_id()
-        self._dc.DrawText(str(label),
+            
+        dc.DrawText(str(label),
                           screen_coordinates_start[0] +
                           (screen_coordinates_end[0] - screen_coordinates_start[0]) * 0.5,
                           screen_coordinates_start[1] +
@@ -248,19 +258,7 @@ class LineProfilesOverlay:
         -------
 
         """
-        if self._dc and self._dc is not None:
-
-            # draw lines again
-            line_width = self._line_profile_handler.get_line_profile_width()
-            self._dc.SetPen(
-                wx.Pen(LineProfilesOverlay.PEN_COLOR_LINE, self._view._PixelToScreenCoordinates(line_width, 0)[0]))
-            self._dc.SetTextForeground(LineProfilesOverlay.PEN_COLOR_LABEL)
-            self._line_profile_handler.update_names()
-            for line_profile, visible in zip(self._line_profile_handler.get_line_profiles(),
-                                                self._line_profile_handler.get_visibility_mask()):
-                if visible:
-                    self._draw_line(line_profile, label=str(self._line_profile_handler._names[line_profile.get_id()]))
-
+ 
         self._dsviewer.Refresh()
 
     def _on_ensemble_fit(self, event=None):
