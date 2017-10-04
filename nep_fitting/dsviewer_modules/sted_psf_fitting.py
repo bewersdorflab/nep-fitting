@@ -373,12 +373,17 @@ class LineProfilesOverlay:
 
     def _on_save(self, event=None):
         from PYME.IO.FileUtils import nameUtils
+        import os
+        
         fdialog = wx.FileDialog(None, 'Save/Append Line Profiles to ...',
                                 wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.SAVE,
                                 defaultDir=nameUtils.genHDFDataFilepath())  # , defaultFile=defFile)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
+            if os.path.exists(fpath):
+                if not wx.MessageBox('Continue saving and append profiles to whatever else is in this file?', 'Output file exists', wx.YES|wx.CANCEL) == wx.YES:
+                    return
             self._line_profile_handler.save_line_profiles(fpath)
 
     def _on_load(self, event=None):
