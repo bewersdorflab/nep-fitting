@@ -314,7 +314,8 @@ class LineProfilesOverlay:
                        'results' : res,
                        'filename' : self._dsviewer.image.filename,
                        'fittype' : res.mdh['EnsembleFitProfiles.FitType'], #ef_mod.fit_type,
-                       'img_data': self._dsviewer.view.GrabPNGToBuffer()}
+                       'img_data': self._dsviewer.view.GrabPNGToBuffer(),
+                       'img_schematic' : reports.get_schematic(res.mdh['EnsembleFitProfiles.FitType'])}
             
             reports.generate_and_save(htmlfn, context, template_name='single_data.html')
             
