@@ -310,7 +310,7 @@ class STEDTubuleMembraneAntibody(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
         return lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm)
@@ -318,7 +318,7 @@ class STEDTubuleMembraneAntibody(ProfileFitter):
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
         return data - lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm)
@@ -383,7 +383,7 @@ class STEDMicrotubuleAntibody(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
         return lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
@@ -391,7 +391,7 @@ class STEDMicrotubuleAntibody(ProfileFitter):
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
         return data - lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
@@ -425,7 +425,7 @@ class STEDTubuleSelfLabeling(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
         return lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
@@ -433,7 +433,7 @@ class STEDTubuleSelfLabeling(ProfileFitter):
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
         return data - self._model_function(parameters, distance, psf_fwhm)
@@ -503,14 +503,14 @@ class STEDTubuleLumen(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
         return lorentz_convolved_tubule_lumen(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
         return lorentz_convolved_tubule_lumen_misfit(parameters, distance, data, psf_fwhm)
 
@@ -576,14 +576,14 @@ class STEDTubuleMembrane(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
         return lorentz_convolved_tubule_membrane(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
-        except TypeError:
+        except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
         return lorentz_convolved_tubule_membrane_misfit(parameters, distance, data, psf_fwhm)
 
