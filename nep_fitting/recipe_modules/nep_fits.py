@@ -77,7 +77,7 @@ class EnsembleFitProfiles(ModuleBase):
     inputName = Input('line_profiles')
 
     fit_type = CStr(profile_fitters.ensemble_fitters.keys()[0])
-    ensemble_parameter_guess = Float()
+    ensemble_parameter_guess = Float(50.)
     hold_ensemble_parameter_constant = Bool(False)
 
     outputName = Output('fit_results')
@@ -215,7 +215,7 @@ class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved so
     inputName = Input('ROIs')
 
     fit_type = CStr('LorentzianConvolvedSolidSphere_ensemblePSF')
-    ensemble_parameter_guess = Float()
+    ensemble_parameter_guess = Float(50.)
     hold_ensemble_parameter_constant = Bool(False)
 
     outputName = Output('fit_results')

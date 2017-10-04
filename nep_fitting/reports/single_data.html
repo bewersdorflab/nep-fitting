@@ -27,13 +27,7 @@
         text-decoration: underline;
     }
 
-    body {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        margin: 0;
-        padding: 0;
-    }
+
 
     .head {
         /*position: fixed;*/
@@ -84,28 +78,31 @@
 
     <div class="container-fluid content">
 
-    <div class="row">
-        <div class="col-md-4">
+    <div class="row" style="padding-top: 20px">
+        <div class="col-lg-4">
+
             {% if img_data is defined %}
-            <img src="image/png:base64, {{ img_data|b64encode }}" alt="Image showing profile locations">
+            <img class="img-fluid" src="data:image/png;base64,{{ img_data|b64encode }}" alt="Image showing profile locations">
             {% endif %}
         </div>
-        <div class="col-md-4">
-            <h2> {{ fit_type }}</h2>
+        <div class="col-lg-8">
+            <h2>Model: {{ fittype }}</h2>
             {% if img_schematic is defined %}
-            <img src="image/png:base64, {{ img_schematic|b64encode }}" alt="Image showing fit schematic">
+            <img class="img-fluid" src="data:image/png;base64,{{ img_schematic|b64encode }}" alt="Image showing fit schematic">
+            {% else %}
+            <p>INSERT SCHEMATIC HERE BY DEFINING img_schematic</p>
             {% endif %}
 
-            <h2>Ensemble Parameter Estimates</h2>
+            <h2 style="padding-top: 20px">Ensemble Parameter Estimates</h2>
             <table class="table">
                 {% for n, v in ensemble_results.items() %}
-                <tr><td>{{ n }}</td><td>{{ '%3.2f +- %3.2f nm' % v }}</td></tr>
+                <tr class="display-4"><td>{{ n }}</td><td>{{ '%3.2f &plusmn; %3.2f nm' % v }}</td></tr>
                 {% endfor %}
             </table>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" style="padding-top: 50px">
         <div class="col-12">
             <h2> Individual fit parameters </h2>
             <table class="table">
@@ -125,7 +122,7 @@
                     <tr>
                         <td> {{ results['index'][i] }}</td>
                         {% for n in results['fitResults'][0].dtype.names %}
-                            <td>{{'%3.2f' % results['fitResults'][i][n]}} +- {{'%3.2f' % results['fitError'][i][n]}}</td>
+                            <td>{{'%3.2f' % results['fitResults'][i][n]}} &plusmn; {{'%3.2f' % results['fitError'][i][n]}}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
