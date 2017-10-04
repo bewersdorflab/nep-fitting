@@ -311,10 +311,14 @@ class LineProfilesOverlay:
             
             from nep_fitting import reports
             
+            
+            
+            
             context = {'ensemble_results' : ensemble_results,
                        'results' : res,
                        'filename' : self._dsviewer.image.filename,
-                       'fittype' : ef_mod.fit_type}
+                       'fittype' : ef_mod.fit_type,
+                       'img_data': self._dsviewer.view.GrabPNGToBuffer()}
             
             reports.generate_and_save(htmlfn, context, template_name='single_data.html')
             
