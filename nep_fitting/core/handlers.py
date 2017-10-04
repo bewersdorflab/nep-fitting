@@ -73,12 +73,12 @@ class LineProfileHandler(object):
     def _load_profiles_from_list(self, ragged):
         for lp in ragged:
             if isinstance(lp, rois.LineProfile):
-                self.add_line_profile(lp, gui=False)  # we might not be using a GUI
+                self.add_line_profile(lp, update=False)  # we might not be using a GUI
             elif type(lp) is dict:  # recreate the line profile
                 if lp['class'] == 'LineProfile':
                     input_lp = lp.copy()
                     del input_lp['class']
-                    self.add_line_profile(rois.LineProfile(**input_lp), gui=False)
+                    self.add_line_profile(rois.LineProfile(**input_lp), update=False)
 
     def _load_profiles_from_array(self, parray):
         profile_count = parray.shape[0]
