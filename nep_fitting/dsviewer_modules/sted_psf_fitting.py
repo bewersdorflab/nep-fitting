@@ -49,15 +49,17 @@ class LineProfilesOverlay:
         self.image_name = filename.split('/')[-1].strip('.' + filename.split('.')[-1])
         # create LineProfileHandler with reference to ImageStack
         self._line_profile_handler = LineProfileHandler(self._image, image_name=self.image_name)
+        
+        dsviewer.AddMenuItem('Profiles', "Draw line\tCtrl-L", self._add_line)
 
         # add this overlay to the overlays to be rendered
         self._do.overlays.append(self.DrawOverlays)
 
         # add a gui panel to the window to control the values
         self._dsviewer.paneHooks.append(self.generate_panel)
-        LineProfileHandler.LIST_CHANGED_SIGNAL.connect(self._refresh)
+        LineProfileHandler.LIST_CHANGED_SIGNAL.connect(self._refresh) #FIXME - signals should be instance variables, not class variables
 
-    def _add_line(self):
+    def _add_line(self, event=None):
         """
         This callback function is called, whenever a new line has been drawn using the selection tool
         and should be added
@@ -95,7 +97,7 @@ class LineProfilesOverlay:
         add_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_TOOLBAR, (16,16)))
         add_btn.SetToolTipString('Add a profile corresponding to the current selection')
         btn_sizer.Add(add_btn, 0, wx.EXPAND)
-        add_btn.Bind(wx.EVT_BUTTON, lambda e: self._add_line())
+        add_btn.Bind(wx.EVT_BUTTON, self._add_line)
         del_btn = wx.Button(pan, -1, label='Delete', style=wx.BU_EXACTFIT)
         del_btn.SetToolTipString('Delete the currently selected profile(s)')
         del_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_MINUS, wx.ART_TOOLBAR, (16,16)))
@@ -264,15 +266,19 @@ class LineProfilesOverlay:
     def _on_ensemble_fit(self, event=None):
         from PYME.recipes.base import ModuleCollection
         from nep_fitting.recipe_modules import nep_fits
-        from PYME.DSView.modules import profileFitting
+        
         from PYME.IO.ragged import RaggedCache
         from PYME.IO.FileUtils import nameUtils
+        
+        import os
+        import webbrowser
 
         rec = ModuleCollection()
 
-        rec.add_module(nep_fits.EnsembleFitProfiles(rec, inputName='line_profiles',
+        ef_mod = nep_fits.EnsembleFitProfiles(rec, inputName='line_profiles',
                                                            fit_type=profile_fitters.ensemble_fitters.keys()[0],
-                                                           hold_ensemble_parameter_constant=False, outputName='output'))
+                                                           hold_ensemble_parameter_constant=False, outputName='output')
+        rec.add_module(ef_mod)
 
         # populate namespace with current profiles
         rec.namespace['line_profiles'] = RaggedCache(self._line_profile_handler.get_line_profiles())
@@ -281,6 +287,17 @@ class LineProfilesOverlay:
 
         res = rec.execute()
 
+        #print res, res.keys(), len(res)
+        #print res['ensemble_parameter'], res['ensemble_parameter'][0]
+        
+        #extract the ensemble parameters into an easy to parse format
+        e_res = res['ensemble_parameter'][0]
+        ensemble_params = e_res.dtype.names
+        ensemble_results ={name : (e_res[name], res['ensemble_uncertainty'][0][name]) for name in ensemble_params}
+        
+        #print ensemble_results
+        #print('Ensemble parameter fitted as: %3.2f+-%3.2f nm' %(res['ensemble_parameter'][0], res['ensemble_uncertainty'][0]))
+
         fdialog = wx.FileDialog(None, 'Save results as ...',
                                 wildcard='hdf (*.hdf)|*.hdf', style=wx.SAVE,
                                 defaultDir=nameUtils.genShiftFieldDirectoryPath())  # , defaultFile=defFile)
@@ -288,12 +305,25 @@ class LineProfilesOverlay:
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
 
-            res.to_hdf(fpath, tablename='fitResults')
+            res.to_hdf(fpath, tablename='profile_fits') #table name changed to avoid conflicts with standard fit data
+            
+            htmlfn = os.path.splitext(fpath)[0] + '.html'
+            
+            from nep_fitting import reports
+            
+            context = {'ensemble_results' : ensemble_results,
+                       'results' : res,
+                       'filename' : self._dsviewer.image.filename,
+                       'fittype' : ef_mod.fit_type}
+            
+            reports.generate_and_save(htmlfn, context, template_name='single_data.html')
+            
+            webbrowser.open('file://' + htmlfn, 2)
 
     def _on_ensemble_test(self, event=None):
         from PYME.recipes.base import ModuleCollection
         from nep_fitting.recipe_modules import nep_fits
-        from PYME.DSView.modules import profileFitting
+        
         from PYME.IO.ragged import RaggedCache
         import matplotlib.pyplot as plt
 

@@ -11,4 +11,7 @@ def main():
     #monkey patch dsviewer modules so we can load nep-fitting on launch
     modules.modeModules['nep'] = modules.modeModules['lite'] + ['sted_psf_fitting',]
     
-    dsviewer.main(sys.argv + ['-m', 'nep'])
+    dsviewer.main(sys.argv[1:] + ['-m', 'nep'])
+    
+if __name__ == '__main__':
+    main()
