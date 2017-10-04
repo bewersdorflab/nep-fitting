@@ -283,7 +283,7 @@ class LineProfilesOverlay:
         rec.namespace['line_profiles'] = RaggedCache(self._line_profile_handler.get_line_profiles())
         if not rec.configure_traits(view=rec.pipeline_view, kind='modal'):
             return  # handle cancel
-        fit_type = rec.modules[0].fit_type
+
         res = rec.execute()
 
         #print res, res.keys(), len(res)
@@ -310,13 +310,10 @@ class LineProfilesOverlay:
             
             from nep_fitting import reports
             
-            
-            
-            
             context = {'ensemble_results' : ensemble_results,
                        'results' : res,
                        'filename' : self._dsviewer.image.filename,
-                       'fittype' : fit_type,
+                       'fittype' : res.mdh['EnsembleFitProfiles.FitType'], #ef_mod.fit_type,
                        'img_data': self._dsviewer.view.GrabPNGToBuffer()}
             
             reports.generate_and_save(htmlfn, context, template_name='single_data.html')

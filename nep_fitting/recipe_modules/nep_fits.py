@@ -3,6 +3,7 @@ from PYME.recipes.traits import Input, Output, Float, Enum, CStr, Bool, Int, Lis
 
 import numpy as np
 from PYME.IO import tabular
+from PYME.IO import MetaDataHandler
 
 from nep_fitting.core import profile_fitters, region_fitters
 from nep_fitting.core.handlers import LineProfileHandler, RegionHandler
@@ -34,10 +35,10 @@ class TestEnsembleParameters(ModuleBase):
         res = tabular.recArrayInput(np.array(ensemble_error, dtype=dt))
 
         # propagate metadata, if present
-        try:
-            res.mdh = inp.mdh
-        except AttributeError:
-            pass
+        res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
+        
+        res.mdh['TestEnsembleParameters.FitType'] = self.fit_type
+        res.mdh['TestEnsembleParameters.EnsembleTestValues'] = self.ensemble_test_values
 
         namespace[self.outputName] = res
 
@@ -102,10 +103,11 @@ class EnsembleFitProfiles(ModuleBase):
         res = tabular.recArrayInput(fitter.results)
 
         # propagate metadata, if present
-        try:
-            res.mdh = inp.mdh
-        except AttributeError:
-            pass
+        res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
+
+        res.mdh['EnsembleFitProfiles.FitType'] = self.fit_type
+        res.mdh['EnsembleFitProfiles.EnsembleParameterGuess'] = self.ensemble_parameter_guess
+        res.mdh['EnsembleFitProfiles.HoldEnsembleParamConstant'] = self.hold_ensemble_parameter_constant
 
         namespace[self.outputName] = res
 
@@ -178,10 +180,9 @@ class FitProfiles(ModuleBase):
         res = tabular.recArrayInput(fitter.results)
 
         # propagate metadata, if present
-        try:
-            res.mdh = inp.mdh
-        except AttributeError:
-            pass
+        res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
+
+        res.mdh['FitProfiles.FitType'] = self.fit_type
 
         namespace[self.outputName] = res
 
@@ -240,10 +241,11 @@ class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved so
         res = tabular.recArrayInput(fitter.results)
 
         # propagate metadata, if present
-        try:
-            res.mdh = inp.mdh
-        except AttributeError:
-            pass
+        res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
+
+        res.mdh['EnsembleFitROIs.FitType'] = self.fit_type
+        res.mdh['EnsembleFitROIs.EnsembleParameterGuess'] = self.ensemble_parameter_guess
+        res.mdh['EnsembleFitROIs.HoldEnsembleParamConstant'] = self.hold_ensemble_parameter_constant
 
         namespace[self.outputName] = res
 
