@@ -169,9 +169,6 @@ class ProfileFitter(object):
                     ensemble_error[fi]['fit_stddev'][field] = res['fitResults'][field].std()
                 for ti in tDict['ensemble_parameter']:
                     field = ti[0]
-                    print('here')
-                    print(res['ensemble_parameter'][field])
-                    print(np.shape(ensemble_error[fi]['ensemble_parameter'][field]))
                     ensemble_error[fi]['ensemble_parameter'][field] = res['ensemble_parameter'][field][0]
 
 
