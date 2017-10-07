@@ -360,11 +360,6 @@ class LineProfilesOverlay:
             fpath = fdialog.GetPath()
             reports.generate_and_save(fpath, context, template_name='ensemble_test.html')
 
-        #plt.scatter(rec.modules[0].ensemble_test_values.items()[0][1], res['ensemble_error'])
-        for k in res['ensemble_parameter'][0].dtype.names:
-            plt.scatter(res['ensemble_parameter'][k], res['ensemble_meanMSE'])
-        plt.show()
-
     def _on_fit(self, event=None):
         from PYME.recipes.base import ModuleCollection
         from nep_fitting.recipe_modules import nep_fits
