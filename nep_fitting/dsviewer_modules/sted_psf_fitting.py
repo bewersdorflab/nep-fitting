@@ -352,13 +352,13 @@ class LineProfilesOverlay:
             'img_schematic': reports.get_schematic(res.mdh['TestEnsembleParameters.FitType'])
         }
 
-        # fdialog = wx.FileDialog(None, 'Save report as ...',
-        #                         wildcard='html (*.html)|*.html', style=wx.SAVE,
-        #                         defaultDir=nameUtils.genShiftFieldDirectoryPath())
-        # succ = fdialog.ShowModal()
-        # if (succ == wx.ID_OK):
-        #     fpath = fdialog.GetPath()
-        #     reports.generate_and_save(fpath, context, template_name='ensemble_test.html')
+        fdialog = wx.FileDialog(None, 'Save report as ...',
+                                wildcard='html (*.html)|*.html', style=wx.SAVE,
+                                defaultDir=nameUtils.genShiftFieldDirectoryPath())
+        succ = fdialog.ShowModal()
+        if (succ == wx.ID_OK):
+            fpath = fdialog.GetPath()
+            reports.generate_and_save(fpath, context, template_name='ensemble_test.html')
 
         #plt.scatter(rec.modules[0].ensemble_test_values.items()[0][1], res['ensemble_error'])
         for k in res['ensemble_parameter'][0].dtype.names:
