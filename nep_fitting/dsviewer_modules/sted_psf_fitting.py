@@ -323,8 +323,9 @@ class LineProfilesOverlay:
 
     def _on_ensemble_test(self, event=None):
         from PYME.recipes.base import ModuleCollection
+        from PYME.IO.FileUtils import nameUtils
         from nep_fitting.recipe_modules import nep_fits
-        
+        from nep_fitting import reports
         from PYME.IO.ragged import RaggedCache
         import matplotlib.pyplot as plt
 
@@ -341,7 +342,27 @@ class LineProfilesOverlay:
 
         res = rec.execute()
 
-        plt.scatter(rec.modules[0].ensemble_test_values.items()[0][1], res['ensemble_error'])
+        # generate report
+        context = {
+            #'ensemble_parameters': res.mdh['TestEnsembleParameters.EnsembleTestValues'],  # note this is a dict
+            'results': res,
+            'filename': self._dsviewer.image.filename,
+            'fittype': res.mdh['TestEnsembleParameters.FitType'],
+            'img_data': self._dsviewer.view.GrabPNGToBuffer(),
+            'img_schematic': reports.get_schematic(res.mdh['TestEnsembleParameters.FitType'])
+        }
+
+        # fdialog = wx.FileDialog(None, 'Save report as ...',
+        #                         wildcard='html (*.html)|*.html', style=wx.SAVE,
+        #                         defaultDir=nameUtils.genShiftFieldDirectoryPath())
+        # succ = fdialog.ShowModal()
+        # if (succ == wx.ID_OK):
+        #     fpath = fdialog.GetPath()
+        #     reports.generate_and_save(fpath, context, template_name='ensemble_test.html')
+
+        #plt.scatter(rec.modules[0].ensemble_test_values.items()[0][1], res['ensemble_error'])
+        for k in res['ensemble_parameter'][0].dtype.names:
+            plt.scatter(res['ensemble_parameter'][k], res['ensemble_meanMSE'])
         plt.show()
 
     def _on_fit(self, event=None):
