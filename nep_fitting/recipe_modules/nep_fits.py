@@ -11,6 +11,7 @@ from nep_fitting.core.handlers import LineProfileHandler, RegionHandler
 
 @register_module('TestEnsembleParameters')
 class TestEnsembleParameters(ModuleBase):
+    # todo, make this safe for >1 ensemble parameter, if that use case becomes relevant
     inputName = Input('profiles')
 
     fit_type = CStr(profile_fitters.fitters.keys()[0])
@@ -30,9 +31,8 @@ class TestEnsembleParameters(ModuleBase):
         fit_class = profile_fitters.ensemble_fitters[self.fit_type]
         fitter = fit_class(handler)
 
-        ensemble_error = fitter.ensemble_test(self.ensemble_test_values)
-        dt = [('ensemble_error', '<f')]
-        res = tabular.recArrayInput(np.array(ensemble_error, dtype=dt))
+        results = fitter.ensemble_test(self.ensemble_test_values)
+        res = tabular.recArrayInput(results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
