@@ -136,18 +136,43 @@ class ProfileFitter(object):
         return ensemble_error
 
 
-    def ensemble_test(self, test_vals):
-        num_tests = len(test_vals.items()[0][1])
-        ensemble_error = np.zeros(num_tests)
-        try:
+    def ensemble_test(self, test_parameters):
+        #dt = [(param, [('ensemble_error', '<f'), ('value', '<f'), ('fitResults')]) for param in test_parameters.keys()]
+        tDict = dict(self._fit_result_dtype)
+        dt = [('ensemble_parameter', tDict['ensemble_parameter']),
+              ('fit_mean', tDict['fitResults']),
+              ('fit_stddev', tDict['fitResults']),
+              ('ensemble_meanMSE', '<f')]
 
+        num_tests = len(test_parameters.items()[0][1])
+        ensemble_error = np.zeros(num_tests, dtype=dt)
+        try:
             for fi in range(num_tests):
-                ensemble_error[fi] = np.mean(self.fit_profiles(ensemble_parameter=test_vals[fi])**2)
-        except KeyError:
-            keys = test_vals.keys()
-            test_params = zip(*[test_vals[key] for key in keys])
+                ensemble_error[fi]['ensemble_meanMSE'] = np.mean(self.fit_profiles(ensemble_parameter=test_parameters[fi])**2)
+                res = self.results
+                for ti in tDict['fitResults']:
+                    field = ti[0]
+                    ensemble_error[fi]['fit_mean'][field] = res['fitResults'][field].mean()
+                    ensemble_error[fi]['fit_stddev'][field] = res['fitResults'][field].std()
+                for ti in tDict['ensemble_parameter']:
+                    field = ti[0]
+                    ensemble_error[fi]['ensemble_parameter'][field] = res['ensemble_parameter'][field][0]
+        except KeyError:  # TODO - remove flexible input, only accept test_parameters as dict
+            keys = test_parameters.keys()
+            test_params = zip(*[test_parameters[key] for key in keys])
             for fi in range(num_tests):
-                ensemble_error[fi] = np.mean(self.fit_profiles(ensemble_parameter=test_params[fi])**2)
+                ensemble_error[fi]['ensemble_meanMSE'] = np.mean(self.fit_profiles(ensemble_parameter=test_params[fi])**2)
+                res = self.results
+                for ti in tDict['fitResults']:
+                    field = ti[0]
+                    ensemble_error[fi]['fit_mean'][field] = res['fitResults'][field].mean()
+                    ensemble_error[fi]['fit_stddev'][field] = res['fitResults'][field].std()
+                for ti in tDict['ensemble_parameter']:
+                    field = ti[0]
+                    print('here')
+                    print(res['ensemble_parameter'][field])
+                    print(np.shape(ensemble_error[fi]['ensemble_parameter'][field]))
+                    ensemble_error[fi]['ensemble_parameter'][field] = res['ensemble_parameter'][field][0]
 
 
         return ensemble_error
