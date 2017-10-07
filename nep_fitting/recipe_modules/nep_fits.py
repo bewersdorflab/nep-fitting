@@ -11,7 +11,6 @@ from nep_fitting.core.handlers import LineProfileHandler, RegionHandler
 
 @register_module('TestEnsembleParameters')
 class TestEnsembleParameters(ModuleBase):
-    # todo, make this safe for >1 ensemble parameter, if that use case becomes relevant
     inputName = Input('profiles')
 
     fit_type = CStr(profile_fitters.fitters.keys()[0])
