@@ -17,7 +17,7 @@
         </div>
         <div class="col-lg-8">
             <h2>Model: {{ fittype }}</h2>
-            {% if img_schematic is defined %}
+            {% if img_schematic is not none %}
             <img class="img-fluid" src="data:image/svg+xml;base64,{{ img_schematic|b64encode }}" alt="Image showing fit schematic">
             {% else %}
             <p>INSERT SCHEMATIC HERE BY DEFINING img_schematic</p>

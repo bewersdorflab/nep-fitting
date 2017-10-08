@@ -87,18 +87,20 @@
         </div>
         <div class="col-lg-8">
             <h2>Model: {{ fittype }}</h2>
-            {% if img_schematic is defined %}
+            {% if img_schematic is not none %}
             <img class="img-fluid" src="data:image/svg+xml;base64,{{ img_schematic|b64encode }}" alt="Image showing fit schematic">
             {% else %}
             <p>INSERT SCHEMATIC HERE BY DEFINING img_schematic</p>
             {% endif %}
 
+            {% if ensemble_results is defined %}
             <h2 style="padding-top: 20px">Ensemble Parameter Estimates</h2>
             <table class="table">
                 {% for n, v in ensemble_results.items() %}
                 <tr class="display-4"><td>{{ n }}</td><td>{{ '%3.2f &plusmn; %3.2f nm' % v }}</td></tr>
                 {% endfor %}
             </table>
+            {% endif %}
         </div>
     </div>
 
