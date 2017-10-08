@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>Input File {{filename}}</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+    <style>
+    tr.odd {
+        background-color: #E0E7F0;
+    }
+
+    td.rh{
+        font-weight: bold;
+    }
+
+    td.c{
+        color: Cyan;
+    }
+
+    td.m{
+        color: Magenta;
+    }
+
+    a{
+        color: Blue;
+        text-decoration: underline;
+    }
+
+
+
+    .head {
+        /*position: fixed;*/
+        top: 0;
+        right: 0;
+        left: 0;
+        width: 100%;
+        height: 120px;
+        background-color: #F0F0F0;
+        /*margin: 0;*/
+        padding-top: 10px;
+        padding-left: 20px;
+    }
+
+    .content {
+        /*overflow: auto;*/
+        /*position: absolute;*/
+        /*width: 100%;*/
+        /*top: 150px;*/
+        /*bottom: 0;*/
+        /*padding: 20px;*/
+    }
+
+    .tracksummary {
+        vertical-align: middle;
+        margin-left: 50px;
+        display: inline-block;
+    }
+
+    .fit-notes {
+        font-size: smaller;
+    }
+
+    .disabled{
+        color: Gray;
+    }
+    </style>
+
+
+
+</head>
+<body>
+    <nav class="head">
+    <h1 style="display: inline;vertical-align: middle">{{fittype}} fits </h1>
+        <h3>for {{filename}}</h3>
+
+    </nav>
+
+    <div class="container-fluid content">
+
+    <div class="row" style="padding-top: 20px">
+        <div class="col-lg-4">
+
+            {% if img_data is defined %}
+            <img class="img-fluid" src="data:image/png;base64,{{ img_data|b64encode }}" alt="Image showing profile locations">
+            {% endif %}
+        </div>
+        <div class="col-lg-8">
+            <h2>Model: {{ fittype }}</h2>
+            {% if img_schematic is not none %}
+            <img class="img-fluid" src="data:image/svg+xml;base64,{{ img_schematic|b64encode }}" alt="Image showing fit schematic">
+            {% else %}
+            <p>INSERT SCHEMATIC HERE BY DEFINING img_schematic</p>
+            {% endif %}
+
+            {% if ensemble_results is defined %}
+            <h2 style="padding-top: 20px">Ensemble Parameter Estimates</h2>
+            <table class="table">
+                {% for n, v in ensemble_results.items() %}
+                <tr class="display-4"><td>{{ n }}</td><td>{{ '%3.2f &plusmn; %3.2f nm' % v }}</td></tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row" style="padding-top: 50px">
+        <div class="col-12">
+            <h2> Individual fit parameters </h2>
+            <table class="table">
+                <thead><tr>
+                    <th>Index</th>
+                {% for n in results['fitResults'][0].dtype.names %}
+                    <th>{{n}}</th>
+                {% endfor %}
+                </tr></thead>
+                <tbody>
+                <tr><td></td>
+                    {% for n in results['fitResults'][0].dtype.names %}
+                    <td>{{results['fitResults'][n]|hist(figsize=(4,3), type='bar', xlabel='')}}</td>
+                    {% endfor %}
+                </tr>
+                {% for i in range(results['index'].size) %}
+                    <tr>
+                        <td> {{ results['index'][i] }}</td>
+                        {% for n in results['fitResults'][0].dtype.names %}
+                            <td>{{'%3.2f' % results['fitResults'][i][n]}} &plusmn; {{'%3.2f' % results['fitError'][i][n]}}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    </div>
+</body>
+</html>

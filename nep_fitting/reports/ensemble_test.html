@@ -1,0 +1,75 @@
+</head>
+<body>
+    <nav class="head">
+    <h1 style="display: inline;vertical-align: middle">{{fittype}} fits </h1>
+        <h3>for {{filename}}</h3>
+
+    </nav>
+
+    <div class="container-fluid content">
+
+    <div class="row" style="padding-top: 20px">
+        <div class="col-lg-4">
+
+            {% if img_data is defined %}
+            <img class="img-fluid" src="data:image/png;base64,{{ img_data|b64encode }}" alt="Image showing profile locations">
+            {% endif %}
+        </div>
+        <div class="col-lg-8">
+            <h2>Model: {{ fittype }}</h2>
+            {% if img_schematic is not none %}
+            <img class="img-fluid" src="data:image/svg+xml;base64,{{ img_schematic|b64encode }}" alt="Image showing fit schematic">
+            {% else %}
+            <p>INSERT SCHEMATIC HERE BY DEFINING img_schematic</p>
+            {% endif %}
+
+            <h2 style="padding-top: 20px">Ensemble Parameter Ranges</h2>
+            <table class="table">
+                {% for ens_par in results['ensemble_parameter'][0].dtype.names %}
+                <tr class="display-4"><td>{{ ens_par }}</td><td>{{ '%.1f nm &le; %s &le; %.1f nm' % (results['ensemble_parameter'][ens_par].min(),ens_par,results['ensemble_parameter'][ens_par].max()) }}</td></tr>
+                {% endfor %}
+            </table>
+
+            <h2 style="padding-top: 20px">Ensemble Error</h2>
+            <table class="table">
+                <tr><td></td>
+                    {% for ens_par in results['ensemble_parameter'][0].dtype.names %}
+                    {% set plot_data = {ens_par: results['ensemble_parameter'][ens_par], 'error':results['ensemble_meanMSE']} %}
+                    <td>{{ plot_data|plot(figsize=(8,6), type='scatter', xvals=ens_par, yvals=['error'], ylabel='Mean MSE [ADU^2]', c='black')}}</td>
+                    {% endfor %}
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row" style="padding-top: 50px">
+        <div class="col-12">
+            <h2> Individual fit parameters </h2>
+            <table class="table">
+                <thead><tr>
+                    <th>Ensemble Parameter</th>
+                {% for v in results['fit_mean'][0].dtype.names %}
+                    <th>{{v}}</th>
+                {% endfor %}
+                </tr></thead>
+                <tbody>
+                {% for ens_par in results['ensemble_parameter'][0].dtype.names %}
+                    <tr>
+                        <td> {{ ens_par }}</td>
+                        {% for v in results['fit_mean'][0].dtype.names %}
+                            {% set plot_data = {ens_par: results['ensemble_parameter'][ens_par], v:results['fit_mean'][v], 'stddev':results['fit_stddev'][v]} %}
+                            <td>{{ plot_data|plot(figsize=(4,3), type='errorbar', xvals=ens_par, yvals=[v], yerr=results['fit_stddev'][v], c='black')}}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    </div>
+</body>
+</html>
