@@ -363,9 +363,10 @@ class LineProfilesOverlay:
     def _on_fit(self, event=None):
         from PYME.recipes.base import ModuleCollection
         from nep_fitting.recipe_modules import nep_fits
-        from PYME.DSView.modules import profileFitting
         from PYME.IO.ragged import RaggedCache
         from PYME.IO.FileUtils import nameUtils
+        import os
+        import webbrowser
 
         rec = ModuleCollection()
 
@@ -386,7 +387,21 @@ class LineProfilesOverlay:
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
 
-            res.to_hdf(fpath, tablename='fitResults')
+            res.to_hdf(fpath, tablename='profile_fits')  # table name changed to avoid conflicts with standard fit data
+
+            htmlfn = os.path.splitext(fpath)[0] + '.html'
+
+            from nep_fitting import reports
+
+            context = {'results': res,
+                       'filename': self._dsviewer.image.filename,
+                       'fittype': res.mdh['FitProfiles.FitType'],
+                       'img_data': self._dsviewer.view.GrabPNGToBuffer(),
+                       'img_schematic': reports.get_schematic(res.mdh['FitProfiles.FitType'])}
+
+            reports.generate_and_save(htmlfn, context, template_name='single_data.html')
+
+            webbrowser.open('file://' + htmlfn, 2)
 
     def _on_save(self, event=None):
         from PYME.IO.FileUtils import nameUtils
