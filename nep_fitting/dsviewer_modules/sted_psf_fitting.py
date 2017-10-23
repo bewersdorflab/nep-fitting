@@ -327,7 +327,7 @@ class LineProfilesOverlay:
         from nep_fitting.recipe_modules import nep_fits
         from nep_fitting import reports
         from PYME.IO.ragged import RaggedCache
-        import matplotlib.pyplot as plt
+        import webbrowser
 
         rec = ModuleCollection()
 
@@ -359,6 +359,8 @@ class LineProfilesOverlay:
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
             reports.generate_and_save(fpath, context, template_name='ensemble_test.html')
+
+            webbrowser.open('file://' + fpath, 2)
 
     def _on_fit(self, event=None):
         from PYME.recipes.base import ModuleCollection
