@@ -266,7 +266,7 @@ class LineProfilesOverlay:
     def _on_ensemble_fit(self, event=None):
         from PYME.recipes.base import ModuleCollection
         from nep_fitting.recipe_modules import nep_fits
-        
+        from nep_fitting import reports
         from PYME.IO.ragged import RaggedCache
         from PYME.IO.FileUtils import nameUtils
         
@@ -308,14 +308,15 @@ class LineProfilesOverlay:
             
             htmlfn = os.path.splitext(fpath)[0] + '.html'
             
-            from nep_fitting import reports
-            
             context = {'ensemble_results' : ensemble_results,
                        'results' : res,
                        'filename' : self._dsviewer.image.filename,
                        'fittype' : res.mdh['EnsembleFitProfiles.FitType'], #ef_mod.fit_type,
-                       'img_data': self._dsviewer.view.GrabPNGToBuffer(),
                        'img_schematic' : reports.get_schematic(res.mdh['EnsembleFitProfiles.FitType'])}
+            handler_names = self._line_profile_handler.get_image_names()
+            if (len(handler_names) == 1) and (handler_names[0] == self.image_name):
+                # if there's only a single image, include it in the report
+                context['img_data'] = self._dsviewer.view.GrabPNGToBuffer()
             
             reports.generate_and_save(htmlfn, context, template_name='single_data.html')
             
@@ -348,9 +349,12 @@ class LineProfilesOverlay:
             'results': res,
             'filename': self._dsviewer.image.filename,
             'fittype': res.mdh['TestEnsembleParameters.FitType'],
-            'img_data': self._dsviewer.view.GrabPNGToBuffer(),
             'img_schematic': reports.get_schematic(res.mdh['TestEnsembleParameters.FitType'])
         }
+        handler_names = self._line_profile_handler.get_image_names()
+        if (len(handler_names) == 1) and (handler_names[0] == self.image_name):
+            # if there's only a single image, include it in the report
+            context['img_data'] = self._dsviewer.view.GrabPNGToBuffer()
 
         fdialog = wx.FileDialog(None, 'Save report as ...',
                                 wildcard='html (*.html)|*.html', style=wx.SAVE,
@@ -369,6 +373,7 @@ class LineProfilesOverlay:
         from PYME.IO.FileUtils import nameUtils
         import os
         import webbrowser
+        from nep_fitting import reports
 
         rec = ModuleCollection()
 
@@ -393,13 +398,14 @@ class LineProfilesOverlay:
 
             htmlfn = os.path.splitext(fpath)[0] + '.html'
 
-            from nep_fitting import reports
-
             context = {'results': res,
                        'filename': self._dsviewer.image.filename,
                        'fittype': res.mdh['FitProfiles.FitType'],
-                       'img_data': self._dsviewer.view.GrabPNGToBuffer(),
                        'img_schematic': reports.get_schematic(res.mdh['FitProfiles.FitType'])}
+            handler_names = self._line_profile_handler.get_image_names()
+            if (len(handler_names) == 1) and (handler_names[0] == self.image_name):
+                # if there's only a single image, include it in the report
+                context['img_data'] = self._dsviewer.view.GrabPNGToBuffer()
 
             reports.generate_and_save(htmlfn, context, template_name='single_data.html')
 
