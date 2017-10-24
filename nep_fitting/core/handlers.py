@@ -203,6 +203,19 @@ class LineProfileHandler(object):
     def _on_list_changed(self):
         LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
 
+    def get_image_names(self):
+        """
+
+        Returns
+        -------
+        names : array
+            Array of unique image names from which profiles were extracted.
+        """
+        profs = self.get_line_profiles()
+        names = np.unique([p.get_image_name() for p in profs])
+        return names
+
+
 class RegionHandler(object):
     LIST_CHANGED_SIGNAL = dispatch.Signal() #TODO - why is this a class level variable???
 
