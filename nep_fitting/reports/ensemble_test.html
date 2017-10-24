@@ -2,7 +2,9 @@
 <body>
     <nav class="head">
     <h1 style="display: inline;vertical-align: middle">{{fittype}} fits </h1>
+        {% if img_data is defined %}
         <h3>for {{filename}}</h3>
+        {% endif %}
 
     </nav>
 
