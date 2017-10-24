@@ -13,7 +13,7 @@ env.filters['hist'] = graphing_filters.hist
 env.filters['b64encode'] = base64.b64encode
 
 schematic_files = {
-    'STEDTubule_Lumen': 'STED_lumen_labeled_tubule.svg',
+    'STEDTubule_Filled': 'STED_lumen_labeled_tubule.svg',
     # 'STEDTubuleMembrane': STEDTubuleMembrane,  # thin membrane approximation is depreciated
     'STEDTubule_SurfaceAntibody': 'STED_tubule_antibody.svg',
     'STEDTubule_SurfaceSNAP': 'STED_SNAP_labeled_tubule.svg',
