@@ -118,7 +118,7 @@ requirements:
   # in requirements" below).
   run:
     - python 2.7
-    - python-microscopy
+    - python-microscopy >=17.10.24
 
 
 
