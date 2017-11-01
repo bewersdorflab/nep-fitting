@@ -629,7 +629,7 @@ fitters = {
     'STEDTubule_SurfaceSNAP': STEDTubuleSelfLabeling_ne
 }
 ensemble_fitters = {
-    'STEDTubule_Lumen': STEDTubuleLumen,
+    'STEDTubule_Filled': STEDTubuleLumen,
     # 'STEDTubuleMembrane': STEDTubuleMembrane,  # thin membrane approximation is depreciated
     'STEDTubule_SurfaceAntibody': STEDTubuleMembraneAntibody,
     'STEDTubule_SurfaceSNAP': STEDTubuleSelfLabeling,
