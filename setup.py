@@ -9,4 +9,8 @@ setup(name='nep_fitting',
       author='Andrew Barentine, Michael Graff, David Baddeley',
       author_email='andrew.barentine@yale.edu',
       packages=find_packages(),
+      package_data={
+            # include all svg and html files, otherwise conda will miss them
+            '': ['*.svg', '*.html'],
+      }
      )
