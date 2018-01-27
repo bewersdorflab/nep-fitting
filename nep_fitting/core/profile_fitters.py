@@ -480,10 +480,10 @@ class STEDTubuleSelfLabeling_ne(ProfileFitter):
 
         # [amplitude, tubule diameter, center position, background]
         self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
 
         self._ensemble_parameter = None  # 'PSF FWHM [nm]'
 
@@ -553,12 +553,12 @@ class STEDTubuleLumen_ne(ProfileFitter):
 
         # [amplitude, tubule diameter, center position, background]
         self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
 
-        self._ensemble_parameter = 'PSF FWHM [nm]'
+        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
