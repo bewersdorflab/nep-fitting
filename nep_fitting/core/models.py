@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.special as spec
 #------------------------------------------------ PSF Model Functions ------------------------------------------------#
 
 def lorentzian_psf(x, fwhm):
@@ -74,6 +75,33 @@ def lorentz_convolved_annulus(p, distance, psf_fwhm):
     model = np.real(pre * (inner - outer))  # clip the (zero) imaginary part, so fitpack doesnt get upset
     return amp * model / peak + bkgnd
 
+def gauss_convolved_annulus_approx(p, distance, psf_fwhm):
+    """
+    The circle used in constructing this model function was Taylor expanded to second order before being convolved with
+    a Gaussian PSF model.
+
+    Parameters
+    ----------
+    p : list-like
+        array of fit parameters (amplitude, inner radius, center position, and background offset)
+    distance : ndarray
+        position array
+    psf_fwhm : float
+        full-width at half-maximum for the Gaussian PSF used in this model
+
+    Returns
+    -------
+
+    """
+    amp, r_inner, center, bkgnd, r_outer = p
+    r = r_inner
+    R = r_outer
+
+    t = distance - center
+    sig = psf_fwhm / 2.3548200450309493  # (2*np.sqrt(2*np.log(2)))
+
+    return ((np.sqrt(2*np.pi)*(np.sqrt(sig**(-2))*sig*(sig**2 + t**2)*spec.erf((np.sqrt(sig**(-2))*(r - t))/np.sqrt(2)) - 2*r**2*spec.erf((r - t)/(np.sqrt(2)*sig)) + np.sqrt(sig**(-2))*sig**3*spec.erf((np.sqrt(sig**(-2))*(r + t))/np.sqrt(2)) + np.sqrt(sig**(-2))*sig*t**2*spec.erf((np.sqrt(sig**(-2))*(r + t))/np.sqrt(2)) - 2*r**2*spec.erf((r + t)/(np.sqrt(2)*sig))) - 2*sig*(r - t + (r + t)*np.exp((2*r*t)/sig**2))*np.exp(-(r + t)**2/(2.*sig**2)))/r + (-(np.sqrt(2*np.pi)*(np.sqrt(sig**(-2))*sig*(sig**2 + t**2)*spec.erf((np.sqrt(sig**(-2))*(R - t))/np.sqrt(2)) - 2*R**2*spec.erf((R - t)/(np.sqrt(2)*sig)) + np.sqrt(sig**(-2))*sig**3*spec.erf((np.sqrt(sig**(-2))*(R + t))/np.sqrt(2)) + np.sqrt(sig**(-2))*sig*t**2*spec.erf((np.sqrt(sig**(-2))*(R + t))/np.sqrt(2)) - 2*R**2*spec.erf((R + t)/(np.sqrt(2)*sig)))) + 2*sig*(R - t + (R + t)*np.exp((2*R*t)/sig**2))*np.exp(-(R + t)**2/(2.*sig**2)))/R)/(4.*np.sqrt(2*np.pi))
+
 def lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
@@ -82,6 +110,15 @@ def lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
     r_outer = r_inner + 17.5  # [nm]
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
+
+def gauss_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
+    amp, d_inner, center, bkgnd = parameters
+
+    r_inner = 0.5 * d_inner
+    # 25 nm without antibodies, 60 nm with primary and secondary, see 10.1073/pnas.75.4.1820
+    r_outer = r_inner + 17.5  # [nm]
+
+    return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
 def lorentz_convolved_tubule_membrane_antibody_ne(parameters, distance):
     amp, d_inner, center, bkgnd, psf_fwhm = parameters
@@ -92,6 +129,14 @@ def lorentz_convolved_tubule_membrane_antibody_ne(parameters, distance):
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
+def gauss_convolved_tubule_membrane_antibody_ne(parameters, distance):
+    amp, d_inner, center, bkgnd, psf_fwhm = parameters
+
+    r_inner = 0.5 * d_inner
+    # 25 nm without antibodies, 60 nm with primary and secondary, see 10.1073/pnas.75.4.1820
+    r_outer = r_inner + 17.5  # [nm]
+
+    return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
 def lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm):
     amp, center, bkgnd = parameters
@@ -100,6 +145,14 @@ def lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm):
     r_outer = r_inner + 17.5  # [nm]
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
+
+def gauss_convolved_microtubule_antibody(parameters, distance, psf_fwhm):
+    amp, center, bkgnd = parameters
+    # 25 nm without antibodies, 60 nm with primary and secondary, see 10.1073/pnas.75.4.1820
+    r_inner = 12.5  # [nm]
+    r_outer = r_inner + 17.5  # [nm]
+
+    return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
 def lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
@@ -110,10 +163,24 @@ def lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
+def gauss_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm):
+    amp, d_inner, center, bkgnd = parameters
+
+    r_inner = 0.5 * d_inner
+    # SNAP diameter ~ 3.6 nm, Halo diameter ~ 4.4 nm, size of Dyes themselves ~ 1 nm, so 4.5 nm offset
+    r_outer = r_inner + 4.5  # [nm]
+
+    return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
+
 def lorentz_convolved_coated_tubule_selflabeling_ne(parameters, distance):
     amp, d_inner, center, bkgnd, psf_fwhm = parameters
 
     return lorentz_convolved_coated_tubule_selflabeling(parameters[:-1], distance, psf_fwhm)
+
+def gauss_convolved_coated_tubule_selflabeling_ne(parameters, distance):
+    amp, d_inner, center, bkgnd, psf_fwhm = parameters
+
+    return gauss_convolved_coated_tubule_selflabeling(parameters[:-1], distance, psf_fwhm)
 
 def lorentz_convolved_tubule_membrane(p, x, gamma):
     """
