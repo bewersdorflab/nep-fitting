@@ -75,7 +75,7 @@ def lorentz_convolved_annulus(p, distance, psf_fwhm):
     model = np.real(pre * (inner - outer))  # clip the (zero) imaginary part, so fitpack doesnt get upset
     return amp * model / peak + bkgnd
 
-def gauss_convolved_annulus_approx(p, distance, psf_fwhm):
+def gauss_convolved_annulus_approx_2nd_order_taylors(p, distance, psf_fwhm):
     """
     The circle used in constructing this model function was Taylor expanded to second order before being convolved with
     a Gaussian PSF model.
@@ -101,6 +101,30 @@ def gauss_convolved_annulus_approx(p, distance, psf_fwhm):
     sig = psf_fwhm / 2.3548200450309493  # (2*np.sqrt(2*np.log(2)))
 
     return ((np.sqrt(2*np.pi)*(np.sqrt(sig**(-2))*sig*(sig**2 + t**2)*spec.erf((np.sqrt(sig**(-2))*(r - t))/np.sqrt(2)) - 2*r**2*spec.erf((r - t)/(np.sqrt(2)*sig)) + np.sqrt(sig**(-2))*sig**3*spec.erf((np.sqrt(sig**(-2))*(r + t))/np.sqrt(2)) + np.sqrt(sig**(-2))*sig*t**2*spec.erf((np.sqrt(sig**(-2))*(r + t))/np.sqrt(2)) - 2*r**2*spec.erf((r + t)/(np.sqrt(2)*sig))) - 2*sig*(r - t + (r + t)*np.exp((2*r*t)/sig**2))*np.exp(-(r + t)**2/(2.*sig**2)))/r + (-(np.sqrt(2*np.pi)*(np.sqrt(sig**(-2))*sig*(sig**2 + t**2)*spec.erf((np.sqrt(sig**(-2))*(R - t))/np.sqrt(2)) - 2*R**2*spec.erf((R - t)/(np.sqrt(2)*sig)) + np.sqrt(sig**(-2))*sig**3*spec.erf((np.sqrt(sig**(-2))*(R + t))/np.sqrt(2)) + np.sqrt(sig**(-2))*sig*t**2*spec.erf((np.sqrt(sig**(-2))*(R + t))/np.sqrt(2)) - 2*R**2*spec.erf((R + t)/(np.sqrt(2)*sig)))) + 2*sig*(R - t + (R + t)*np.exp((2*R*t)/sig**2))*np.exp(-(R + t)**2/(2.*sig**2)))/R)/(4.*np.sqrt(2*np.pi))
+
+def _gauss_convolved_semicircle_approx(r, t, sig):
+    
+    return np.real((r*np.exp((-5*np.pi*(2j*r*t + 5*np.pi*sig**2))/(2.*r**2))*(12*spec.jv(1,5*np.pi)*(spec.erf((r*(r + t) - 5j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r**2 - r*t + 5j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + (spec.erf((r**2 - r*t - 5j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r*(r + t) + 5j*np.pi*sig**2)/(np.sqrt(2)*r*sig)))*np.exp((10j*np.pi*t)/r)) + 60*spec.jv(1,np.pi)*((spec.erf((r**2 - r*t - 1j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r*(r + t) + 1j*np.pi*sig**2)/(np.sqrt(2)*r*sig)))*np.exp((6*np.pi*(1j*r*t + 2*np.pi*sig**2))/r**2) + (spec.erf((r*(r + t) - 1j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r**2 - r*t + 1j*np.pi*sig**2)/(np.sqrt(2)*r*sig)))*np.exp((4*np.pi*(1j*r*t + 3*np.pi*sig**2))/r**2)) + 20*spec.jv(1,3*np.pi)*((spec.erf((r**2 - r*t - 3j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r*(r + t) + 3j*np.pi*sig**2)/(np.sqrt(2)*r*sig)))*np.exp((8*np.pi*(1j*r*t + np.pi*sig**2))/r**2) + (spec.erf((r*(r + t) - 3j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r**2 - r*t + 3j*np.pi*sig**2)/(np.sqrt(2)*r*sig)))*np.exp((2*np.pi*(1j*r*t + 4*np.pi*sig**2))/r**2)) + 30*np.pi*spec.erf((r - t)/(np.sqrt(2)*sig))*np.exp((5*np.pi*(2j*r*t + 5*np.pi*sig**2))/(2.*r**2)) + 30*np.pi*spec.erf((r + t)/(np.sqrt(2)*sig))*np.exp((5*np.pi*(2j*r*t + 5*np.pi*sig**2))/(2.*r**2)) + 30*spec.jv(1,2*np.pi)*((spec.erf((r**2 - r*t - 2j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r*(r + t) + 2j*np.pi*sig**2)/(np.sqrt(2)*r*sig)))*np.exp((7*np.pi*(2j*r*t + 3*np.pi*sig**2))/(2.*r**2)) + (spec.erf((r*(r + t) - 2j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r**2 - r*t + 2j*np.pi*sig**2)/(np.sqrt(2)*r*sig)))*np.exp((3*np.pi*(2j*r*t + 7*np.pi*sig**2))/(2.*r**2))) + 15*spec.jv(1,4*np.pi)*((spec.erf((r**2 - r*t - 4j*np.pi*sig**2)/(np.sqrt(2)*r*sig)) + spec.erf((r + t + (4j*np.pi*sig**2)/r)/(np.sqrt(2)*sig)))*np.exp((9*np.pi*(2j*r*t + np.pi*sig**2))/(2.*r**2)) + (-spec.erf((-r + t - (4j*np.pi*sig**2)/r)/(np.sqrt(2)*sig)) + spec.erf((r + t - (4j*np.pi*sig**2)/r)/(np.sqrt(2)*sig)))*np.exp((np.pi*(2j*r*t + 9*np.pi*sig**2))/(2.*r**2)))))/240.)
+
+def gauss_convolved_annulus_approx(p, distance, psf_fwhm):
+    amp, r_inner, center, bkgnd, r_outer = p
+
+    t = distance - center
+    sig = psf_fwhm / 2.3548200450309493  # (2*np.sqrt(2*np.log(2)))
+    
+    outer = _gauss_convolved_semicircle_approx(r_outer, t, sig)
+    inner = _gauss_convolved_semicircle_approx(r_inner, t, sig)
+
+    return amp*(outer - inner) + bkgnd
+
+def gauss_convolved_tubule_lumen_approx(p, distance, psf_fwhm):
+    amp, diameter, center, bkgnd = p
+    r = 0.5*diameter
+
+    t = distance - center
+    sig = psf_fwhm / 2.3548200450309493  # (2*np.sqrt(2*np.log(2)))
+
+    return amp * _gauss_convolved_semicircle_approx(r, t, sig) + bkgnd
 
 def lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
