@@ -248,6 +248,9 @@ class ProfileFitter(object):
         plt.savefig(res_dir + 'heat_map.pdf')
 
 
+#----------------------------------------------- Naive Fitters --------------------------------------------------------#
+
+
 class Gaussian(ProfileFitter):
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
@@ -316,6 +319,19 @@ class Lorentzian(ProfileFitter):
         tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
         return amplitude, tubule_diameter, center_position, background
 
+class SimpleFWHM(ProfileFitter):
+    def _calc_guess(self, line_profile):
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        fwhm = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        return fwhm
+
+#----------------------------------------- Lorentzian-Convolved Fitters -----------------------------------------------#
+
+
 class STEDTubuleMembraneAntibody(ProfileFitter):
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
@@ -335,15 +351,10 @@ class STEDTubuleMembraneAntibody(ProfileFitter):
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
-        return lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm)
+        return lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
-        try:
-            psf_fwhm = ensemble_parameter[0]
-        except (TypeError, IndexError):
-            psf_fwhm = ensemble_parameter
-
-        return data - lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm)
+        return data - lorentz_convolved_tubule_surface_antibody(parameters, distance, ensemble_parameter)
 
     def _calc_guess(self, line_profile):
         # [amplitude, tubule diameter, center position, background]
@@ -370,7 +381,7 @@ class STEDTubuleMembraneAntibody_ne(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
-        return lorentz_convolved_tubule_membrane_antibody_ne(parameters, distance)
+        return lorentz_convolved_tubule_surface_antibody_ne(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -411,12 +422,7 @@ class STEDMicrotubuleAntibody(ProfileFitter):
         return lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
-        try:
-            psf_fwhm = ensemble_parameter[0]
-        except (TypeError, IndexError):
-            psf_fwhm = ensemble_parameter
-
-        return data - lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
+        return data - lorentz_convolved_microtubule_antibody(parameters, distance, ensemble_parameter)
 
     def _calc_guess(self, line_profile):
         # [amplitude, center position, background]
@@ -453,12 +459,7 @@ class STEDTubuleSelfLabeling(ProfileFitter):
         return lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
-        try:
-            psf_fwhm = ensemble_parameter[0]
-        except (TypeError, IndexError):
-            psf_fwhm = ensemble_parameter
-
-        return data - self._model_function(parameters, distance, psf_fwhm)
+        return data - self._model_function(parameters, distance, ensemble_parameter)
 
     def _calc_guess(self, line_profile):
         # [amplitude, tubule diameter, center position, background]
@@ -530,11 +531,7 @@ class STEDTubuleLumen(ProfileFitter):
         return lorentz_convolved_tubule_lumen(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
-        try:
-            psf_fwhm = ensemble_parameter[0]
-        except (TypeError, IndexError):
-            psf_fwhm = ensemble_parameter
-        return lorentz_convolved_tubule_lumen_misfit(parameters, distance, data, psf_fwhm)
+        return data - self._model_function(parameters, distance, ensemble_parameter)
 
     def _calc_guess(self, line_profile):
         # [amplitude, tubule diameter, center position, background]
@@ -583,6 +580,9 @@ class STEDTubuleLumen_ne(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background, psf_fwhm
 
 class STEDTubuleMembrane(ProfileFitter):
+    """
+    Depreciated thin-membrane model
+    """
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
 
@@ -603,11 +603,7 @@ class STEDTubuleMembrane(ProfileFitter):
         return lorentz_convolved_tubule_membrane(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
-        try:
-            psf_fwhm = ensemble_parameter[0]
-        except (TypeError, IndexError):
-            psf_fwhm = ensemble_parameter
-        return lorentz_convolved_tubule_membrane_misfit(parameters, distance, data, psf_fwhm)
+        return data - self._model_function(parameters, distance, ensemble_parameter)
 
     def _calc_guess(self, line_profile):
         # [amplitude, tubule diameter, center position, background]
@@ -620,7 +616,258 @@ class STEDTubuleMembrane(ProfileFitter):
         tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
         return amplitude, tubule_diameter, center_position, background
 
-# TODO - fitters should be non-ensemble fits only, or ensemble fits with constant ensemble_parameter
+
+# ----------------------------------------- Gaussian-Convolved Fitters ------------------------------------------------#
+
+
+class GaussTubuleMembraneAntibody(ProfileFitter):
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+        self._ensemble_parameter = 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        try:
+            psf_fwhm = ensemble_parameter[0]
+        except (TypeError, IndexError):
+            psf_fwhm = ensemble_parameter
+
+        return gauss_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        return data - self._model_function(parameters, distance, ensemble_parameter)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        return amplitude, tubule_diameter, center_position, background
+
+class GaussTubuleMembraneAntibody_ne(ProfileFitter):
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
+
+        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        if ensemble_parameter:
+            raise UserWarning('This is not an ensemble fit class')
+        return gauss_convolved_tubule_surface_antibody_ne(parameters, distance)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        if ensemble_parameter:
+            raise UserWarning('This is not an ensemble fit class')
+        return data - self._model_function(parameters, distance)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        psf_fwhm = tubule_diameter
+        return amplitude, tubule_diameter, center_position, background, psf_fwhm
+
+class GaussMicrotubuleAntibody(ProfileFitter):
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+        self._ensemble_parameter = 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        try:
+            psf_fwhm = ensemble_parameter[0]
+        except (TypeError, IndexError):
+            psf_fwhm = ensemble_parameter
+
+        return gauss_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        return data - self._model_function(parameters, distance, ensemble_parameter)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        return amplitude, center_position, background
+
+class GaussTubuleSelfLabeling(ProfileFitter):
+    """
+    This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
+    """
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+        self._ensemble_parameter = 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        try:
+            psf_fwhm = ensemble_parameter[0]
+        except (TypeError, IndexError):
+            psf_fwhm = ensemble_parameter
+
+        return gauss_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        return data - self._model_function(parameters, distance, ensemble_parameter)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        return amplitude, tubule_diameter, center_position, background
+
+class GaussTubuleSelfLabeling_ne(ProfileFitter):
+    """
+    This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
+    """
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
+
+        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        if ensemble_parameter:
+            raise UserWarning('This is not an ensemble fit class')
+        return gauss_convolved_coated_tubule_selflabeling_ne(parameters, distance)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        if ensemble_parameter:
+            raise UserWarning('This is not an ensemble fit class')
+        return data - self._model_function(parameters, distance)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        psf_fwhm = tubule_diameter
+        return amplitude, tubule_diameter, center_position, background, psf_fwhm
+
+class GaussTubuleLumen(ProfileFitter):
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+        self._ensemble_parameter = 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        try:
+            psf_fwhm = ensemble_parameter[0]
+        except (TypeError, IndexError):
+            psf_fwhm = ensemble_parameter
+        return gauss_convolved_tubule_lumen_approx(parameters, distance, psf_fwhm)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        return data - self._model_function(parameters, distance, ensemble_parameter)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        return amplitude, tubule_diameter, center_position, background
+
+class GaussTubuleLumen_ne(ProfileFitter):
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
+
+        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        if ensemble_parameter:
+            raise UserWarning('This is not an ensemble fit class')
+        return gauss_convolved_tubule_lumen_approx_ne(parameters, distance)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        if ensemble_parameter:
+            raise UserWarning('This is not an ensemble fit class')
+        return data - self._model_function(parameters, distance)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        psf_fwhm = tubule_diameter
+        return amplitude, tubule_diameter, center_position, background, psf_fwhm
+
+# fitters should be non-ensemble fits only, or ensemble fits with constant ensemble_parameter
 fitters = {
     'Gaussian': Gaussian,
     'Lorentzian': Lorentzian,
@@ -633,5 +880,9 @@ ensemble_fitters = {
     # 'STEDTubuleMembrane': STEDTubuleMembrane,  # thin membrane approximation is depreciated
     'STEDTubule_SurfaceAntibody': STEDTubuleMembraneAntibody,
     'STEDTubule_SurfaceSNAP': STEDTubuleSelfLabeling,
-    'STEDMicrotubule_SurfaceAntibody': STEDMicrotubuleAntibody
+    'STEDMicrotubule_SurfaceAntibody': STEDMicrotubuleAntibody,
+    'GaussTubule_Filled': GaussTubuleLumen,
+    'GaussTubule_SurfaceAntibody': GaussTubuleMembraneAntibody,
+    'GaussTubule_SurfaceSNAP': GaussTubuleSelfLabeling,
+    'GaussMicrotubule_SurfaceAntibody': GaussMicrotubuleAntibody
 }
