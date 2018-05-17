@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.special as spec
+import warnings
 #------------------------------------------------ PSF Model Functions ------------------------------------------------#
 
 def lorentzian_psf(x, fwhm):
@@ -77,6 +78,7 @@ def lorentz_convolved_annulus(p, distance, psf_fwhm):
 
 def gauss_convolved_annulus_approx_2nd_order_taylors(p, distance, psf_fwhm):
     """
+    DEPRECIATED
     The circle used in constructing this model function was Taylor expanded to second order before being convolved with
     a Gaussian PSF model.
 
@@ -93,6 +95,7 @@ def gauss_convolved_annulus_approx_2nd_order_taylors(p, distance, psf_fwhm):
     -------
 
     """
+    warnings.warn('This model has been depreciated as better approximations are available', DeprecationWarning)
     amp, r_inner, center, bkgnd, r_outer = p
     r = r_inner
     R = r_outer
@@ -126,7 +129,16 @@ def gauss_convolved_tubule_lumen_approx(p, distance, psf_fwhm):
 
     return amp * _gauss_convolved_semicircle_approx(r, t, sig) + bkgnd
 
-def lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
+def gauss_convolved_tubule_lumen_approx_ne(p, distance):
+    amp, diameter, center, bkgnd, psf_fwhm = p
+    r = 0.5*diameter
+
+    t = distance - center
+    sig = psf_fwhm / 2.3548200450309493  # (2*np.sqrt(2*np.log(2)))
+
+    return amp * _gauss_convolved_semicircle_approx(r, t, sig) + bkgnd
+
+def lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
     r_inner = 0.5 * d_inner
@@ -135,7 +147,7 @@ def lorentz_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
-def gauss_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
+def gauss_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
     r_inner = 0.5 * d_inner
@@ -144,7 +156,7 @@ def gauss_convolved_tubule_membrane_antibody(parameters, distance, psf_fwhm):
 
     return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
-def lorentz_convolved_tubule_membrane_antibody_ne(parameters, distance):
+def lorentz_convolved_tubule_surface_antibody_ne(parameters, distance):
     amp, d_inner, center, bkgnd, psf_fwhm = parameters
 
     r_inner = 0.5 * d_inner
@@ -153,7 +165,7 @@ def lorentz_convolved_tubule_membrane_antibody_ne(parameters, distance):
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
-def gauss_convolved_tubule_membrane_antibody_ne(parameters, distance):
+def gauss_convolved_tubule_surface_antibody_ne(parameters, distance):
     amp, d_inner, center, bkgnd, psf_fwhm = parameters
 
     r_inner = 0.5 * d_inner
@@ -208,7 +220,8 @@ def gauss_convolved_coated_tubule_selflabeling_ne(parameters, distance):
 
 def lorentz_convolved_tubule_membrane(p, x, gamma):
     """
-    Model function for membrane-labeled tubule imaged with STED. The membrane is assumed to be infinitely thin.
+    DEPRECIATED Model function for membrane-labeled tubule imaged with STED. The membrane is assumed to be infinitely
+    thin.
 
     Parameters
     ----------
@@ -225,6 +238,8 @@ def lorentz_convolved_tubule_membrane(p, x, gamma):
         profile of membrane-labeled tubule, projected and convolved with a Lorentzian
 
     """
+    warnings.warn('This model function has been depreciated, as the thin-membrane approximation is not necessary',
+                  DeprecationWarning)
     a, d, x0, c = p
     r = d / 2
 
@@ -244,30 +259,6 @@ def lorentz_convolved_tubule_membrane(p, x, gamma):
     amp = r * a
 
     return np.real((amp * mid) + c)
-
-
-def lorentz_convolved_tubule_membrane_misfit(p, x, data, gamma):
-    """
-    Error function for membrane-labeled tubule imaged with STED
-
-    Parameters
-    ----------
-    p : array-like
-        list of fit parameters [amplitude, tubule diameter, center position, background]
-    x : array
-        position vector
-    gamma : float
-        FWHM of Lorentzian PSF
-
-    Returns
-    -------
-    misfit : array
-        difference array of data and model function
-
-    """
-    modelFunc = lorentz_convolved_tubule_membrane(p, x, gamma)
-
-    return (data - modelFunc)
 
 
 def lorentz_convolved_tubule_lumen(p, x, gamma):
@@ -302,30 +293,6 @@ def lorentz_convolved_tubule_lumen(p, x, gamma):
     amp = a / (0.25 * gamma * (-2 + 2 * np.sqrt(1 + (4 * r ** 2) / gamma ** 2)))
 
     return np.real((amp / 4) * (left + right) + c)
-
-
-def lorentz_convolved_tubule_lumen_misfit(p, x, data, gamma):
-    """
-        Error function for lumen-labeled tubule imaged with STED
-
-        Parameters
-        ----------
-        p : array-like
-            list of fit parameters [amplitude, tubule diameter, center position, background]
-        x : array
-            position vector
-        gamma : float
-            FWHM of Lorentzian PSF
-
-        Returns
-        -------
-        misfit : array
-            difference array of data and model function
-
-        """
-    modelFunc = lorentz_convolved_tubule_lumen(p, x, gamma)
-
-    return (data - modelFunc)
 
 def lorentz_convolved_tubule_lumen_ne(p, x):
     """
