@@ -195,7 +195,21 @@ class ProfileFitter(object):
 
         return res
 
-    def plot_results(self, plot_dir):
+    def plot_results(self, plot_dir, plot_bounds=None):
+        """
+
+        Parameters
+        ----------
+        plot_dir : str
+            path to directory where pdfs of plots should be saved
+        plot_bounds : dict
+            item-value pairs for x and y bounds in order to overwrite default pyplot auto-settings. Sould be of the form
+            {'xmin': float, 'xmax': float, 'ymin': foat, 'ymax': float}
+
+        Returns
+        -------
+
+        """
         import matplotlib.pyplot as plt
         colors = [u'#4878cf', u'#6acc65', u'#d65f5f', u'#b47cc7', u'#c4ad66', u'#77bedb']
 
@@ -217,6 +231,9 @@ class ProfileFitter(object):
             except ValueError:  # if this is a non-ensemble fit
                 plt.plot(interpolated_coords, self._model_function(res[ind]['fitResults'], interpolated_coords),
                          color=colors[1], label='Fit')
+            if plot_bounds:
+                plt.xlim(**plot_bounds)
+                plt.ylim(**plot_bounds)
             plt.xlabel('Position [nm]', fontsize=26)
             plt.ylabel('Amplitude [ADU]', fontsize=26)
             plt.legend()
