@@ -211,8 +211,12 @@ class ProfileFitter(object):
             position = profs[ind].get_coordinates()
             plt.scatter(position, profs[ind].get_data(), color=colors[0], label='Cross-section')
             interpolated_coords = np.linspace(position.min(), position.max(), 300)
-            plt.plot(interpolated_coords, self._model_function(res[ind]['fitResults'], interpolated_coords, res[ind]['ensemble_parameter']),
-                     color=colors[1], label='Fit')
+            try:
+                plt.plot(interpolated_coords, self._model_function(res[ind]['fitResults'], interpolated_coords, res[ind]['ensemble_parameter']),
+                         color=colors[1], label='Fit')
+            except ValueError:  # if this is a non-ensemble fit
+                plt.plot(interpolated_coords, self._model_function(res[ind]['fitResults'], interpolated_coords),
+                         color=colors[1], label='Fit')
             plt.xlabel('Position [nm]', fontsize=26)
             plt.ylabel('Amplitude [ADU]', fontsize=26)
             plt.legend()
