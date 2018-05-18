@@ -195,16 +195,19 @@ class ProfileFitter(object):
 
         return res
 
-    def plot_results(self, plot_dir, plot_bounds=None):
+    def plot_results(self, plot_dir, x_bounds=None, y_bounds=None):
         """
 
         Parameters
         ----------
         plot_dir : str
             path to directory where pdfs of plots should be saved
-        plot_bounds : dict
-            item-value pairs for x and y bounds in order to overwrite default pyplot auto-settings. Sould be of the form
-            {'xmin': float, 'xmax': float, 'ymin': foat, 'ymax': float}
+        x_bounds : dict
+            item-value pairs for x bounds in order to overwrite default pyplot auto-settings. Should be of the form
+            {'xmin': float, 'xmax': float}
+        y_bounds : dict
+            item-value pairs to y bounds in order to overwrite default pyplot auto-settings. Should be of the form
+            {'ymin': foat, 'ymax': float}
 
         Returns
         -------
@@ -231,9 +234,10 @@ class ProfileFitter(object):
             except ValueError:  # if this is a non-ensemble fit
                 plt.plot(interpolated_coords, self._model_function(res[ind]['fitResults'], interpolated_coords),
                          color=colors[1], label='Fit')
-            if plot_bounds:
-                plt.xlim(**plot_bounds)
-                plt.ylim(**plot_bounds)
+            if x_bounds:
+                plt.xlim(**x_bounds)
+            if y_bounds:
+                plt.ylim(**y_bounds)
             plt.xlabel('Position [nm]', fontsize=26)
             plt.ylabel('Amplitude [ADU]', fontsize=26)
             plt.legend()
