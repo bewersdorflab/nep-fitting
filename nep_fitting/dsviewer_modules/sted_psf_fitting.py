@@ -429,7 +429,7 @@ class LineProfilesOverlay:
     def _on_load(self, event=None):
         # TODO fill in this function
         from PYME.IO.FileUtils import nameUtils
-        fdialog = wx.FileDialog(None, 'Load Line Profiles to ...',
+        fdialog = wx.FileDialog(None, 'Load Line Profiles from ...',
                                 wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.OPEN)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
