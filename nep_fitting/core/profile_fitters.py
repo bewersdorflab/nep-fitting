@@ -227,7 +227,7 @@ class ProfileFitter(object):
         for ind in range(num_profs):
             position = profs[ind].get_coordinates()
             plt.scatter(position, profs[ind].get_data(), color=colors[0], label='Cross-section')
-            interpolated_coords = np.linspace(position.min(), position.max(), 300)
+            interpolated_coords = np.linspace(position.min(), position.max(), len(position)*10)
             try:
                 plt.plot(interpolated_coords, self._model_function(res[ind]['fitResults'], interpolated_coords, res[ind]['ensemble_parameter']),
                          color=colors[1], label='Fit')
