@@ -297,7 +297,7 @@ class Gaussian(ProfileFitter):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
 
-        return data - naive_gaussian(parameters, distance)
+        return data - self._model_function(parameters, distance)
 
     def _calc_guess(self, line_profile):
         # [amplitude, psf_fwhm, center position, background]
@@ -331,7 +331,7 @@ class Lorentzian(ProfileFitter):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
 
-        return data - naive_lorentzian(parameters, distance)
+        return data - self._model_function(parameters, distance)
 
     def _calc_guess(self, line_profile):
         # [amplitude, psf_fwhm, center position, background]
@@ -379,7 +379,7 @@ class STEDTubuleMembraneAntibody(ProfileFitter):
         return lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
-        return data - lorentz_convolved_tubule_surface_antibody(parameters, distance, ensemble_parameter)
+        return data - self._model_function(parameters, distance, ensemble_parameter)
 
     def _calc_guess(self, line_profile):
         # [amplitude, tubule diameter, center position, background]
@@ -447,7 +447,7 @@ class STEDMicrotubuleAntibody(ProfileFitter):
         return lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
-        return data - lorentz_convolved_microtubule_antibody(parameters, distance, ensemble_parameter)
+        return data - self._model_function(parameters, distance, ensemble_parameter)
 
     def _calc_guess(self, line_profile):
         # [amplitude, center position, background]
