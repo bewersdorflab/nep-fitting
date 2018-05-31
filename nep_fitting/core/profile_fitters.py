@@ -537,7 +537,7 @@ class STEDTubuleSelfLabeling_ne(ProfileFitter):
 
 class STEDTubuleLumen(ProfileFitter):
     def __init__(self, line_profile_handler):
-        super(self.__class__, self).__init__(line_profile_handler)
+        super(STEDTubuleLumen, self).__init__(line_profile_handler)
 
         # [amplitude, tubule diameter, center position, background]
         self._fit_result_dtype = [('index', '<i4'),
