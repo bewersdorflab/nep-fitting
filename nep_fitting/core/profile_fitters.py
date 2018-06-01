@@ -23,12 +23,16 @@ class ProfileFitter(object):
 
         Parameters
         ----------
-        parameters
-        distance
-        ensemble_parameter
+        parameters : tuple
+            fit model parameters, e.g. amplitude, diameter, etc.
+        distance : ndarray
+            1D position array in units of nanometers
+        ensemble_parameter : float, or tuple of float
+            value(s) which are to be held consistent during fitting across all line profiles
 
         Returns
         -------
+        model : ndarray
 
         """
         raise NotImplementedError
@@ -37,15 +41,18 @@ class ProfileFitter(object):
         """
         prototype function to be overridden in derived classes
 
-        Parameters
-        ----------
-        parameters
-        distance
-        data
-        ensemble_parameter
+        parameters : tuple
+            fit model parameters, e.g. amplitude, diameter, etc.
+        distance : ndarray
+            1D position array in units of nanometers
+        data : ndarray
+            1D line profile to be fit
+        ensemble_parameter : float, or tuple of float
+            value(s) which are to be held consistent during fitting across all line profiles
 
         Returns
         -------
+        model : ndarray
 
         """
         raise NotImplementedError
@@ -53,17 +60,35 @@ class ProfileFitter(object):
     def _calc_guess(self, line_profile):
         """
         prototype function to be overridden in derived classes
+
         Parameters
         ----------
-        line_profile
+        line_profile : nep-fitting.core.rois.LineProfile
 
         Returns
         -------
+        guess : tuple
+            initial parameters for the fit based on simple metrics of the line profile input
 
         """
         raise NotImplementedError
 
     def fit_profiles(self, ensemble_parameter=None):
+        """
+        Fit all line profiles. If the fit factory is marked "ne" standing for non-ensemble, then all fits will be
+        independent of each other. Otherwise, the ensemble_parameter tuple will be held the same for all tubules.
+
+        Parameters
+        ----------
+        ensemble_parameter : tuple
+            Fit parameter(s) which are to be held constant (and the same) in all profile fits.
+
+        Returns
+        -------
+        residuals : ndarray
+            1D array of concatenated residual arrays for each profile
+
+        """
         profiles = self._handler.get_line_profiles()
         profile_count = len(profiles)
         self.results = np.zeros(profile_count, dtype=self._fit_result_dtype)
@@ -87,7 +112,7 @@ class ProfileFitter(object):
             self.results[pi]['index'] = pi
             if ensemble_parameter:
                 self.results[pi]['ensemble_parameter'] = np.atleast_1d(ensemble_parameter).astype('f')
-                # self.results[pi]['ensemble_uncertainty'] = np.atleast_1d(ensemble_parameter).astype('f')
+
             self.results[pi]['fitResults'] = res.astype('f')
             self.results[pi]['fitError'] = errors.astype('f')
 
@@ -103,6 +128,23 @@ class ProfileFitter(object):
         return np.hstack(all_residuals)
 
     def fit_profiles_mean(self, ensemble_parameter=None):
+        """
+        Like fit_profiles, but returns the average mean-squared error of all line profile fits.
+
+        Fit all line profiles. If the fit factory is marked "ne" standing for non-ensemble, then all fits will be
+        independent of each other. Otherwise, the ensemble_parameter tuple will be held the same for all tubules.
+
+        Parameters
+        ----------
+        ensemble_parameter : tuple
+            Fit parameter(s) which are to be held constant (and the same) in all profile fits.
+
+        Returns
+        -------
+        ensemble_error : float
+            average of mean-squared error where the average is taken over all line profile fits.
+
+        """
         profiles = self._handler.get_line_profiles()
         profile_count = len(profiles)
         self.results = np.zeros(profile_count, dtype=self._fit_result_dtype)
@@ -126,7 +168,7 @@ class ProfileFitter(object):
             self.results[pi]['index'] = pi
             if ensemble_parameter:
                 self.results[pi]['ensemble_parameter'] = np.atleast_1d(ensemble_parameter).astype('f')
-                # self.results[pi]['ensemble_uncertainty'] = np.atleast_1d(ensemble_parameter).astype('f')
+
             self.results[pi]['fitResults'] = res.astype('f')
             self.results[pi]['fitError'] = errors.astype('f')
 
@@ -145,7 +187,21 @@ class ProfileFitter(object):
 
 
     def ensemble_test(self, test_parameters):
-        #dt = [(param, [('ensemble_error', '<f'), ('value', '<f'), ('fitResults')]) for param in test_parameters.keys()]
+        """
+        Test ensemble parameters over an array of input values, returning the average mean-squared error for each test
+
+        Parameters
+        ----------
+        test_parameters : dict
+            keys denote the ensemble parameter to be tested, while the corresponding item contains the array of values
+            to test.
+
+        Returns
+        -------
+        ensemble_error : structured ndarray
+            array of average mean-squared error corresponding to the tests
+
+        """
         tDict = dict(self._fit_result_dtype)
         dt = [('ensemble_parameter', tDict['ensemble_parameter']),
               ('fit_mean', tDict['fitResults']),
@@ -183,6 +239,19 @@ class ProfileFitter(object):
         return ensemble_error
 
     def ensemble_fit(self, guess):
+        """
+
+        Parameters
+        ----------
+        guess : float or list-like of floats
+            initial guess for ensemble parameter(s) value
+
+        Returns
+        -------
+        res : structured ndarray
+            fit results for each profile, including the ensemble parameters and ensemble parameters' uncertainty
+
+        """
         try:
             n_params = len(guess)
         except TypeError:
