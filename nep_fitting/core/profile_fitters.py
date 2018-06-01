@@ -14,6 +14,9 @@ class ProfileFitter(object):
         self._fit_result_dtype = None  # to be overridden in derived class
         self._ensemble_parameter = None  # to be overridden in derived class
 
+        # flag fit factories where radius is squared in model and negative diameters can/should be returned as positive
+        self._squared_radius = False
+
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         """
         prototype function to be overridden in derived classes
@@ -87,15 +90,16 @@ class ProfileFitter(object):
                 # self.results[pi]['ensemble_uncertainty'] = np.atleast_1d(ensemble_parameter).astype('f')
             self.results[pi]['fitResults'] = res.astype('f')
             self.results[pi]['fitError'] = errors.astype('f')
-            #results[pi] = np.array([(pi, res.astype('f'), errors.astype('f'))])#, dtype=self._fit_result_dtype)['fitResults']
+
+            # for models where the radius is squared, convergence to negative values is valid, but negative sign is not
+            # meaningful and can confuse users unfamiliar with the models
+            if self._squared_radius:
+                self.results[pi]['fitResults']['diameter'] = np.abs(self.results[pi]['fitResults']['diameter'])
 
 
             # mse[pi] = np.mean(residuals**2)
             all_residuals.append(residuals)
 
-        # ensemble_error = mse.mean()
-
-        # return ensemble_error
         return np.hstack(all_residuals)
 
     def fit_profiles_mean(self, ensemble_parameter=None):
@@ -125,7 +129,11 @@ class ProfileFitter(object):
                 # self.results[pi]['ensemble_uncertainty'] = np.atleast_1d(ensemble_parameter).astype('f')
             self.results[pi]['fitResults'] = res.astype('f')
             self.results[pi]['fitError'] = errors.astype('f')
-            #results[pi] = np.array([(pi, res.astype('f'), errors.astype('f'))])#, dtype=self._fit_result_dtype)['fitResults']
+
+            # for models where the radius is squared, convergence to negative values is valid, but negative sign is not
+            # meaningful and can confuse users unfamiliar with the models
+            if self._squared_radius:
+                self.results[pi]['fitResults']['diameter'] = np.abs(self.results[pi]['fitResults']['diameter'])
 
 
             mse[pi] = np.mean(residuals**2)
@@ -370,6 +378,9 @@ class STEDTubuleMembraneAntibody(ProfileFitter):
 
         self._ensemble_parameter = 'PSF FWHM [nm]'
 
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
+
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
@@ -402,6 +413,9 @@ class STEDTubuleMembraneAntibody_ne(ProfileFitter):
                   ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
 
         self._ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -437,6 +451,9 @@ class STEDMicrotubuleAntibody(ProfileFitter):
                   ('fitError', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')])]
 
         self._ensemble_parameter = 'PSF FWHM [nm]'
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -474,6 +491,9 @@ class STEDTubuleSelfLabeling(ProfileFitter):
                   ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
 
         self._ensemble_parameter = 'PSF FWHM [nm]'
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -513,6 +533,9 @@ class STEDTubuleSelfLabeling_ne(ProfileFitter):
 
         self._ensemble_parameter = None  # 'PSF FWHM [nm]'
 
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
+
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
@@ -548,6 +571,9 @@ class STEDTubuleLumen(ProfileFitter):
 
         self._ensemble_parameter = 'PSF FWHM [nm]'
 
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
+
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
             psf_fwhm = ensemble_parameter[0]
@@ -581,6 +607,9 @@ class STEDTubuleLumen_ne(ProfileFitter):
                   ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
 
         self._ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -619,6 +648,9 @@ class STEDTubuleMembrane(ProfileFitter):
                   ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
 
         self._ensemble_parameter = 'PSF FWHM [nm]'
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
