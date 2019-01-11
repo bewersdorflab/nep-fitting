@@ -304,15 +304,11 @@ class LineProfilesOverlay:
             res.to_hdf(fpath, tablename='profile_fits') #table name changed to avoid conflicts with standard fit data
 
             # plot individual profiles
-            fitter = profile_fitters.ensemble_fitters[fitting_module.fit_type](self._line_profile_handler)
-
-            # try:
+            # fitter = profile_fitters.ensemble_fitters[fitting_module.fit_type](self._line_profile_handler)
+            fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
             profile_dir = os.path.splitext(fpath)[0] + '/'
             os.mkdir(profile_dir)
-            print(fitter)
             fitter.plot_results(profile_dir)
-            # except:
-            #     pass
 
             htmlfn = os.path.splitext(fpath)[0] + '.html'
             
@@ -403,6 +399,11 @@ class LineProfilesOverlay:
             fpath = fdialog.GetPath()
 
             res.to_hdf(fpath, tablename='profile_fits')  # table name changed to avoid conflicts with standard fit data
+
+            fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
+            profile_dir = os.path.splitext(fpath)[0] + '/'
+            os.mkdir(profile_dir)
+            fitter.plot_results(profile_dir)
 
             htmlfn = os.path.splitext(fpath)[0] + '.html'
 

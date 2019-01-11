@@ -92,14 +92,14 @@ class EnsembleFitProfiles(ModuleBase):
         handler._load_profiles_from_list(inp)
 
         fit_class = profile_fitters.ensemble_fitters[self.fit_type]
-        fitter = fit_class(handler)
+        self.fitter = fit_class(handler)
 
         if self.hold_ensemble_parameter_constant:
-            fitter.fit_profiles(self.ensemble_parameter_guess)
+            self.fitter.fit_profiles(self.ensemble_parameter_guess)
         else:
-            fitter.ensemble_fit(self.ensemble_parameter_guess)
+            self.fitter.ensemble_fit(self.ensemble_parameter_guess)
 
-        res = tabular.recArrayInput(fitter.results)
+        res = tabular.recArrayInput(self.fitter.results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
@@ -172,11 +172,11 @@ class FitProfiles(ModuleBase):
         handler._load_profiles_from_list(inp)
 
         fit_class = profile_fitters.fitters[self.fit_type]
-        fitter = fit_class(handler)
+        self.fitter = fit_class(handler)
 
-        fitter.fit_profiles()
+        self.fitter.fit_profiles()
 
-        res = tabular.recArrayInput(fitter.results)
+        res = tabular.recArrayInput(self.fitter.results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
