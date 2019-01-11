@@ -749,6 +749,82 @@ class STEDTubuleMembrane(ProfileFitter):
 
 # ----------------------------------------- Gaussian-Convolved Fitters ------------------------------------------------#
 
+class GaussTubuleAnnulus(ProfileFitter):
+    """
+    Fitter with flexible annulus thickness (modified as instance attribute)
+    """
+    def __init__(self, line_profile_handler, annulus_thickness):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        self.annulus_thickness = annulus_thickness
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+        self._ensemble_parameter = 'PSF FWHM [nm]'
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        try:
+            psf_fwhm = ensemble_parameter[0]
+        except (TypeError, IndexError):
+            psf_fwhm = ensemble_parameter
+
+        # return gauss_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
+        amp, d_inner, center, bkgnd = parameters
+
+        r_inner = 0.5 * d_inner
+
+        r_outer = r_inner + self.annulus_thickness  # [nm]
+
+        return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None):
+        return data - self._model_function(parameters, distance, ensemble_parameter)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        return amplitude, tubule_diameter, center_position, background
+
+    def test_thickness(self, ensemble_parameter={'psf_fwhm': np.arange(35, 105, 5)}, annulus_thicknesses=None, outdir=None):
+        from PYME.IO import tabular
+        import matplotlib.pyplot as plt
+        psfs = ensemble_parameter['psf_fwhm']
+        num_psfs = len(psfs)
+        num_annuli = len(annulus_thicknesses)
+
+        mmse = np.zeros((num_psfs, num_annuli))
+        diameters = np.zeros_like(mmse)
+        for pi in range(num_psfs):
+            for ai in range(num_annuli):
+                self.annulus_thickness = annulus_thicknesses[ai]
+                mmse[pi, ai] = self.fit_profiles_mean(psfs[pi])
+
+                if outdir is not None:
+                    res = tabular.recArrayInput(self.results)
+                    res.to_hdf(outdir + 'ensemble_fit_results_psf%f_annulus%f.hdf' % (psfs[pi], self.annulus_thickness))
+
+                    plt.figure()
+                    diameter_bins = np.arange(0, 200, 10)
+                    mean_diameter = np.mean(res['fitResults']['diameter'])
+                    diameters[pi, ai] = mean_diameter
+                    plt.hist(res['fitResults']['diameter'], bins=diameter_bins, color='gray')
+                    plt.xlabel('Tubule Diameter [nm]', size=26)
+                    plt.ylabel('Counts', size=26)
+                    plt.title('mean = %.1f +- %f.1 nm' % (mean_diameter, np.std(res['fitResults']['diameter'])))
+                    plt.tight_layout()
+                    plt.savefig(outdir + 'diameter_histogram_psf%f_annulus%f.pdf' % (psfs[pi], self.annulus_thickness))
+        return mmse, diameters
 
 class GaussTubuleMembraneAntibody(ProfileFitter):
     def __init__(self, line_profile_handler):
