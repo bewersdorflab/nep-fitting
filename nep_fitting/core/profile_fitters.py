@@ -163,8 +163,10 @@ class ProfileFitter(object):
                 residual_variance = np.sum(residuals**2) / (len(p.get_coordinates()) - len(guess))
                 # multiply cov by residual variance for estimating parameter variance
                 errors = np.sqrt(np.diag(residual_variance * cov_x))
-            except TypeError: # cov_x is None for singular matrices -> ~no curvature along at least one dimension
+            except (TypeError, ValueError) as e: # cov_x is None for singular matrices -> ~no curvature along at least one dimension
+                print(str(e))
                 errors = -1 * np.ones_like(res)
+
             self.results[pi]['index'] = pi
             if ensemble_parameter:
                 self.results[pi]['ensemble_parameter'] = np.atleast_1d(ensemble_parameter).astype('f')
@@ -322,11 +324,10 @@ class ProfileFitter(object):
             plt.savefig(plot_dir + '%s.pdf' % str(ind))
             fig.clf()
 
-    def generate_heatmap(self, res_dir, ensemble_parameter={'psf_fwhm': np.arange(35, 105, 5)}):
+    def generate_heatmap(self, res_dir, ensemble_parameter={'psf_fwhm': np.arange(35, 105, 5)}, diameter_bins=np.arange(0, 240, 10)):
         # fixme - should be more general or overridden in derived class
         import matplotlib.pyplot as plt
         psfs = ensemble_parameter['psf_fwhm']
-        diameter_bins = np.arange(0, 240, 10)
         num_tests = len(psfs)
         #ens_err = np.zeros(num_tests)
         heat_map = np.zeros((num_tests, len(diameter_bins) - 1))
@@ -341,8 +342,11 @@ class ProfileFitter(object):
             print('missing %i profiles from the heatmap because they fell outside of the diameter bins' % (expected_counts - contained))
 
         fig, ax = plt.subplots()
-        cax = ax.imshow(heat_map, interpolation='nearest', origin='lower',
-                        extent=[diameter_bins[0], diameter_bins[-1], psfs[0], psfs[-1]])
+        cax = ax.imshow(heat_map, interpolation='nearest', origin='lower', cmap='magma', aspect='auto', 
+                        extent=[diameter_bins[0], diameter_bins[-1], 0, num_tests])
+        ax.set_yticks(np.arange(0.5, num_tests + 0.5))
+        ax.set_yticklabels(psfs)
+        ax.set_xticks(diameter_bins[::5])
         plt.xlabel('Tubule Diameter [nm]', size=26)
         plt.ylabel('PSF FWHM [nm]', size=26)
         cbar = fig.colorbar(cax, ticks=[heat_map.min(), heat_map.max()])
