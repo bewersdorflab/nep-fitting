@@ -274,10 +274,10 @@ class LineProfilesOverlay:
         import webbrowser
 
         rec = ModuleCollection()
-
-        rec.add_module(nep_fits.EnsembleFitProfiles(rec, inputName='line_profiles',
+        fitting_module = nep_fits.EnsembleFitProfiles(rec, inputName='line_profiles',
                                                            fit_type=profile_fitters.ensemble_fitters.keys()[0],
-                                                           hold_ensemble_parameter_constant=False, outputName='output'))
+                                                           hold_ensemble_parameter_constant=False, outputName='output')
+        rec.add_module(fitting_module)
 
         # populate namespace with current profiles
         rec.namespace['line_profiles'] = RaggedCache(self._line_profile_handler.get_line_profiles())
@@ -285,14 +285,6 @@ class LineProfilesOverlay:
             return  # handle cancel
 
         res = rec.execute()
-
-        #print res, res.keys(), len(res)
-        #print res['ensemble_parameter'], res['ensemble_parameter'][0]
-        
-        #extract the ensemble parameters into an easy to parse format
-        e_res = res['ensemble_parameter'][0]
-        ensemble_params = e_res.dtype.names
-        ensemble_results ={name : (e_res[name], res['ensemble_uncertainty'][0][name]) for name in ensemble_params}
         
         #print ensemble_results
         #print('Ensemble parameter fitted as: %3.2f+-%3.2f nm' %(res['ensemble_parameter'][0], res['ensemble_uncertainty'][0]))
@@ -302,10 +294,26 @@ class LineProfilesOverlay:
                                 defaultDir=nameUtils.genShiftFieldDirectoryPath())  # , defaultFile=defFile)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
+            # extract the ensemble parameters into an easy to parse format
+            e_res = res['ensemble_parameter'][0]
+            ensemble_params = e_res.dtype.names
+            ensemble_results = {name: (e_res[name], res['ensemble_uncertainty'][0][name]) for name in ensemble_params}
+
             fpath = fdialog.GetPath()
 
             res.to_hdf(fpath, tablename='profile_fits') #table name changed to avoid conflicts with standard fit data
-            
+
+            # plot individual profiles
+            fitter = profile_fitters.ensemble_fitters[fitting_module.fit_type](self._line_profile_handler)
+
+            # try:
+            profile_dir = os.path.splitext(fpath)[0] + '/'
+            os.mkdir(profile_dir)
+            print(fitter)
+            fitter.plot_results(profile_dir)
+            # except:
+            #     pass
+
             htmlfn = os.path.splitext(fpath)[0] + '.html'
             
             context = {'ensemble_results' : ensemble_results,
