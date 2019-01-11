@@ -56,8 +56,8 @@ class LineProfileHandler(object):
     def LineProfile_from_array(self, parray, table_name=None):
         lp = rois.LineProfile(parray['r1'], parray['c1'], parray['r2'], parray['c2'],
                          parray['slice'], parray['width'], identifier=table_name)
-        lp._profile = parray['profile']
-        lp._distance = parray['distance']
+        lp.set_profile(parray['profile'])
+        lp.set_distance(parray['distance'])
         return lp
 
     def save_line_profiles(self, filename, tablename='profiles'):
@@ -85,8 +85,8 @@ class LineProfileHandler(object):
         for pi in range(profile_count):
             lp = rois.LineProfile(parray[pi]['r1'], parray[pi]['c1'], parray[pi]['r2'], parray[pi]['c2'],
                              parray[pi]['slice'], parray[pi]['width'], identifier=pi)
-            lp._profile = parray[pi]['profile']
-            lp._distance = parray[pi]['distance']
+            lp.set_profile(parray[pi]['profile'])
+            lp.set_distance(parray[pi]['distance'])
             # self.add_line_profile(lp)
             # skip GUI calls and just add profile
             self._line_profiles.append(lp)
@@ -113,15 +113,14 @@ class LineProfileHandler(object):
             #print t.name, t.__class__
             if isinstance(t, tables.vlarray.VLArray):
                 profs = ragged.RaggedVLArray(hdf, t.name)
-                print profs[0], profs[0].__class__
                 for i in range(len(profs)):# in profs[:]:
                     p = profs[i]
                     #print p.__class__
                     #print p
                     lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'],
                                           identifier=p['identifier'])
-                    lp._profile = p['profile']
-                    lp._distance = p['distance']
+                    lp.set_profile(p['profile'])
+                    lp.set_distance(p['distance'])
 
                     self.add_line_profile(lp, False)
                     
@@ -163,13 +162,13 @@ class LineProfileHandler(object):
         for lp in self._line_profiles:
             if np.any(lp._profile) and lp._width == self._width:
                 continue
-            lp._profile = profile_line(self.image.data.getSlice(lp._slice), (lp._r1, lp._c1), (lp._r2, lp._c2),
-                                       order=self.interpolation_order, linewidth=self._width)
+            lp.set_profile(profile_line(self.image.data.getSlice(lp._slice), (lp._r1, lp._c1), (lp._r2, lp._c2),
+                                       order=self.interpolation_order, linewidth=self._width))
             lp.set_width(self._width)
 
             dist = np.sqrt((self.image.voxelsize.x * (lp._r2 - lp._r1)) ** 2 + (self.image.voxelsize.y * (lp._c2 - lp._c1)) ** 2)  # [nm]
 
-            lp._distance = np.linspace(0, dist, lp._profile.shape[0])
+            lp.set_distance(np.linspace(0, dist, lp.get_data.shape[0]))
 
     def add_line_profile(self, line_profile, update=True):
         self._line_profiles.append(line_profile)

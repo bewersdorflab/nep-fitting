@@ -14,8 +14,8 @@ class BaseROI(object):
         image_name : str
             stub of image filename which line profile is extracted from
         """
-        self._id = identifier
-        self._image_name = image_name
+        self.set_id(identifier)
+        self.set_image_name(image_name)
     
     def set_id(self, identifier):
         """
@@ -31,6 +31,21 @@ class BaseROI(object):
         Nothing
         """
         self._id = identifier
+
+    def set_image_name(self, image_name):
+        """
+        Set method for image file stub
+
+        Parameters
+        ----------
+        image_name : str
+            stub of image name ROI was originally extracted from
+
+        Returns
+        -------
+        Nothing
+        """
+        self._image_name = image_name
     
     def get_id(self):
         """
@@ -128,10 +143,8 @@ class LineProfile(BaseROI):
         self._c2 = c2
         self._slice = slice
         self._width = width
-        self._profile = np.array(profile)
-        self._distance = np.array(distance)
-        self._id = identifier
-        self._image_name = image_name
+        self.set_profile(profile)
+        self.set_distance(distance)
     
     def get_start(self):
         return self._r1, self._c1
@@ -143,7 +156,10 @@ class LineProfile(BaseROI):
         self._width = width
     
     def set_profile(self, profile):
-        self._profile = profile
+        self._profile = np.asarray(profile)
+
+    def set_distance(self, distance):
+        self._distance = np.asarray(distance)
     
     def get_data(self):
         return self._profile
@@ -182,7 +198,7 @@ class LineProfile(BaseROI):
         
         d = {
             'r1': self._r1, 'c1': self._c1, 'r2': self._r2, 'c2': self._c2, 'slice': self._slice,
-            'width': self._width, 'profile': self._profile.tolist(), 'distance': self._distance.tolist(),
+            'width': self._width, 'profile': self.get_data().tolist(), 'distance': self.get_coordinates().tolist(),
             'image_name': self._image_name, 'identifier': self._id,
             'class': self.__class__.__name__
         }
