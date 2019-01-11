@@ -147,6 +147,12 @@ def lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm):
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
+def lorentz_convolved_tubule_surface_antibody_tilt(parameters, distance, psf_fwhm):
+    amp, d_inner, center, bkgnd, bx = parameters
+    shortened = [amp, d_inner, center, bkgnd]
+    profile = lorentz_convolved_tubule_surface_antibody(shortened, distance, psf_fwhm)
+    return profile + distance * bx
+
 def gauss_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
@@ -155,6 +161,12 @@ def gauss_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm):
     r_outer = r_inner + 17.5  # [nm]
 
     return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
+
+def gauss_convolved_tubule_surface_antibody_tilt(parameters, distance, psf_fwhm):
+    amp, d_inner, center, bkgnd, bx = parameters
+    shortened = [amp, d_inner, center, bkgnd]
+    profile = gauss_convolved_tubule_surface_antibody(shortened, distance, psf_fwhm)
+    return profile + distance * bx
 
 def lorentz_convolved_tubule_surface_antibody_ne(parameters, distance):
     amp, d_inner, center, bkgnd, psf_fwhm = parameters
