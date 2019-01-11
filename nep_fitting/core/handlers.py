@@ -118,13 +118,14 @@ class LineProfileHandler(object):
                     #print p.__class__
                     #print p
                     lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'],
-                                          identifier=p['identifier'])
+                                          identifier=p['identifier'], image_name=p['image_name'])
                     lp.set_profile(p['profile'])
                     lp.set_distance(p['distance'])
 
                     self.add_line_profile(lp, False)
-                    
-        LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
+
+        self.update_names(relabel=True)
+        self._on_list_changed()
 
                 # TODO - check if we need to worry about multiple profiles with the same id
         hdf.close()
@@ -160,7 +161,8 @@ class LineProfileHandler(object):
 
         """
         for lp in self._line_profiles:
-            if np.any(lp._profile) and lp._width == self._width:
+            # skip if already calculated, or if profile was extracted from different image
+            if (np.any(lp._profile) and lp._width == self._width) or (lp.get_image_name() != self.image_name):
                 continue
             lp.set_profile(profile_line(self.image.data.getSlice(lp._slice), (lp._r1, lp._c1), (lp._r2, lp._c2),
                                        order=self.interpolation_order, linewidth=self._width))
