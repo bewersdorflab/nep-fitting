@@ -170,12 +170,13 @@ class LineProfileHandler(object):
 
             dist = np.sqrt((self.image.voxelsize.x * (lp._r2 - lp._r1)) ** 2 + (self.image.voxelsize.y * (lp._c2 - lp._c1)) ** 2)  # [nm]
 
-            lp.set_distance(np.linspace(0, dist, lp.get_data.shape[0]))
+            lp.set_distance(np.linspace(0, dist, lp.get_data().shape[0]))
 
     def add_line_profile(self, line_profile, update=True):
         self._line_profiles.append(line_profile)
         self._visibility_mask.append(line_profile.get_image_name() == self.image_name)
         if update:
+            self.update_names(relabel=True)
             LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
 
 
