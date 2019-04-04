@@ -10,6 +10,7 @@ NEP-fitting can be installed using anaconda (general use) or setuptools (use and
 
 To install using anaconda:
 
+0) You may want to make sure conda is up to date, e.g. 'conda update conda' or 'conda update -n <your environment name> conda'
 1) Run 'conda install -c barentine nep-fitting'
 2) Close python and test installation by running 'STEDFitter' on the terminal, or by running 'dh5view', loading an
 image, and selecting 'sted_psf_fitting' from the 'modules' drop-down menu.
