@@ -113,8 +113,8 @@ class ProfileFitter(object):
             if ensemble_parameter:
                 self.results[pi]['ensemble_parameter'] = np.atleast_1d(ensemble_parameter).astype('f')
 
-            self.results[pi]['fitResults'] = res.astype('f')
-            self.results[pi]['fitError'] = errors.astype('f')
+            self.results[pi]['fitResults'] = tuple(res.astype('f'))
+            self.results[pi]['fitError'] = tuple(errors.astype('f'))
 
             # for models where the radius is squared, convergence to negative values is valid, but negative sign is not
             # meaningful and can confuse users unfamiliar with the models
@@ -171,8 +171,8 @@ class ProfileFitter(object):
             if ensemble_parameter:
                 self.results[pi]['ensemble_parameter'] = np.atleast_1d(ensemble_parameter).astype('f')
 
-            self.results[pi]['fitResults'] = res.astype('f')
-            self.results[pi]['fitError'] = errors.astype('f')
+            self.results[pi]['fitResults'] = tuple(res.astype('f'))
+            self.results[pi]['fitError'] = tuple(errors.astype('f'))
 
             # for models where the radius is squared, convergence to negative values is valid, but negative sign is not
             # meaningful and can confuse users unfamiliar with the models
@@ -525,8 +525,7 @@ class STEDMicrotubuleAntibody(ProfileFitter):
 
         self._ensemble_parameter = 'PSF FWHM [nm]'
 
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
+        self._squared_radius = False # While this is Lorentz-convoled, it doesn't have a fitted radius
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
