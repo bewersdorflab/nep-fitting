@@ -17,6 +17,28 @@ class BaseHandler(object):
         self._visibility_mask = []
         self._names = {}
         self._rois = []
+        self._partial_ensemble_parameters = np.array([])
+
+    @property
+    def n(self):
+        return len(self._rois)
+
+    @property
+    def partial_ensemble_parameters(self):
+        self.update_partial_ensemble_parameters()
+        return self._partial_ensemble_parameters
+
+    def update_partial_ensemble_parameters(self):
+        params = []
+        for ind, roi in enumerate(self._rois):
+            try:
+                params.append(roi.parameter_exchanges[1])
+            except AttributeError:
+                pass
+        peps, indices = np.unique(params, return_index=True)
+        self._partial_ensemble_parameters = {}
+        for ind in range(peps):
+            self._partial_ensemble_parameters[peps[ind]] = indices
 
     def get_visibility_mask(self):
         return self._visibility_mask
@@ -193,6 +215,7 @@ class LineProfileHandler(BaseHandler):
     def add_line_profile(self, line_profile, update=True):
         self._rois.append(line_profile)
         self._visibility_mask.append(line_profile.get_image_name() == self.image_name)
+        self.update_partial_ensemble_parameters()
         if update:
             self.update_names(relabel=True)
             self.LIST_CHANGED_SIGNAL.send(sender=self)
