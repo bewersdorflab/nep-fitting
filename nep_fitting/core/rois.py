@@ -328,6 +328,34 @@ class RectangularROI(BaseROI):
         return d
 
 
+def partial_ensemble_class_factory(base_roi):
+    class PartialEnsembleMixIn(base_roi):
+        def __init__(self, parameter_exchanges):
+            """
+
+            Parameters
+            ----------
+            parameter_exchanges: list
+                list of tuples, (standard name, replacement name), e.g. [('diameter', 'diameter~11')]. Note that
+                replacement names should start with the standard name followed by a '~'
+
+            """
+            self._parameter_exchanges = parameter_exchanges
+
+        @property
+        def parameter_exchanges(self):
+            """
+
+            Returns
+            -------
+            parameter_exchanges: list
+                list of tuples, (standard name, replacement name), e.g. [('diameter', 'diameter~11')]. Note that
+                replacement names should start with the standard name followed by a '~'
+            """
+            return self._parameter_exchanges
+
+    return PartialEnsembleMixIn
+
 module_lookup = {
     'LineProfile': 'PYME.DSView.modules.roiExtraction',
     'RectangularROI': 'PYME.DSView.modules.roiExtraction'
