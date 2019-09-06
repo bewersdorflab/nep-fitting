@@ -111,7 +111,7 @@ class LineProfilesOverlay:
 
         # relabel_btn = wx.Button(pan, -1, label='Relabel')
         # btn_sizer.Add(relabel_btn, 0, wx.EXPAND)
-        #relabel_btn.Bind(wx.EVT_BUTTON, lambda e: self._line_profile_handler.relabel_line_profiles())
+        #relabel_btn.Bind(wx.EVT_BUTTON, lambda e: self._line_profile_handler.relabel())
 
         
 
@@ -512,7 +512,7 @@ class LineProfileList(wx.ListCtrl):
         for line_profile_index in reversed(selected_indices):
             self._line_profile_handler.remove_line_profile(line_profile_index)
             
-        self._line_profile_handler.relabel_line_profiles()
+        self._line_profile_handler.relabel()
 
 
     def change_visibility(self):
