@@ -1,7 +1,7 @@
 
 from scipy import optimize
-
-from .models import *
+import numpy as np
+import models
 
 class ProfileFitter(object):
     def __init__(self, line_profile_handler):
@@ -372,7 +372,7 @@ class Gaussian(ProfileFitter):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
 
-        return naive_gaussian(parameters, distance)
+        return models.naive_gaussian(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -406,7 +406,7 @@ class Lorentzian(ProfileFitter):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
 
-        return naive_lorentzian(parameters, distance)
+        return models.naive_lorentzian(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -460,7 +460,7 @@ class STEDTubuleMembraneAntibody(ProfileFitter):
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
-        return lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
+        return models.lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -493,7 +493,7 @@ class STEDTubuleMembraneAntibody_ne(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
-        return lorentz_convolved_tubule_surface_antibody_ne(parameters, distance)
+        return models.lorentz_convolved_tubule_surface_antibody_ne(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -533,7 +533,7 @@ class STEDMicrotubuleAntibody(ProfileFitter):
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
-        return lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
+        return models.lorentz_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -573,7 +573,7 @@ class STEDTubuleSelfLabeling(ProfileFitter):
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
-        return lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
+        return models.lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -611,7 +611,7 @@ class STEDTubuleSelfLabeling_ne(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
-        return lorentz_convolved_coated_tubule_selflabeling_ne(parameters, distance)
+        return models.lorentz_convolved_coated_tubule_selflabeling_ne(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -651,7 +651,7 @@ class STEDTubuleLumen(ProfileFitter):
             psf_fwhm = ensemble_parameter[0]
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
-        return lorentz_convolved_tubule_lumen(parameters, distance, psf_fwhm)
+        return models.lorentz_convolved_tubule_lumen(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -686,7 +686,7 @@ class STEDTubuleLumen_ne(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
-        return lorentz_convolved_tubule_lumen_ne(parameters, distance)
+        return models.lorentz_convolved_tubule_lumen_ne(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -729,7 +729,7 @@ class STEDTubuleMembrane(ProfileFitter):
             psf_fwhm = ensemble_parameter[0]
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
-        return lorentz_convolved_tubule_membrane(parameters, distance, psf_fwhm)
+        return models.lorentz_convolved_tubule_membrane(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -779,7 +779,7 @@ class GaussTubuleAnnulus(ProfileFitter):
 
         r_outer = r_inner + self.annulus_thickness  # [nm]
 
-        return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
+        return models.gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -844,7 +844,7 @@ class GaussTubuleMembraneAntibody(ProfileFitter):
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
-        return gauss_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
+        return models.gauss_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -874,7 +874,7 @@ class GaussTubuleMembraneAntibody_ne(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
-        return gauss_convolved_tubule_surface_antibody_ne(parameters, distance)
+        return models.gauss_convolved_tubule_surface_antibody_ne(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -912,7 +912,7 @@ class GaussMicrotubuleAntibody(ProfileFitter):
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
-        return gauss_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
+        return models.gauss_convolved_microtubule_antibody(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -949,7 +949,7 @@ class GaussTubuleSelfLabeling(ProfileFitter):
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
 
-        return gauss_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
+        return models.gauss_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -984,7 +984,7 @@ class GaussTubuleSelfLabeling_ne(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
-        return gauss_convolved_coated_tubule_selflabeling_ne(parameters, distance)
+        return models.gauss_convolved_coated_tubule_selflabeling_ne(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
@@ -1021,7 +1021,7 @@ class GaussTubuleLumen(ProfileFitter):
             psf_fwhm = ensemble_parameter[0]
         except (TypeError, IndexError):
             psf_fwhm = ensemble_parameter
-        return gauss_convolved_tubule_lumen_approx(parameters, distance, psf_fwhm)
+        return models.gauss_convolved_tubule_lumen_approx(parameters, distance, psf_fwhm)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         return data - self._model_function(parameters, distance, ensemble_parameter)
@@ -1053,7 +1053,7 @@ class GaussTubuleLumen_ne(ProfileFitter):
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
             raise UserWarning('This is not an ensemble fit class')
-        return gauss_convolved_tubule_lumen_approx_ne(parameters, distance)
+        return models.gauss_convolved_tubule_lumen_approx_ne(parameters, distance)
 
     def _error_function(self, parameters, distance, data, ensemble_parameter=None):
         if ensemble_parameter:
