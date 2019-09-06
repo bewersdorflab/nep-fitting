@@ -10,13 +10,52 @@ from nep_fitting.core import rois
 
 logger = logging.getLogger(__name__)
 
-class LineProfileHandler(object):
-    LIST_CHANGED_SIGNAL = dispatch.Signal()
+class BaseHandler(object):
+    def __init__(self):
+        self.LIST_CHANGED_SIGNAL = dispatch.Signal()
 
-    def __init__(self, image_data=None, interpolation_order=3, image_name=None):
-        self._line_profiles = []
-        self._names = {}
         self._visibility_mask = []
+        self._names = {}
+        self._rois = []
+
+    def get_visibility_mask(self):
+        return self._visibility_mask
+
+    def change_visibility(self, index):
+        self._visibility_mask[index] = not self._visibility_mask[index]
+        self._on_list_changed()
+
+    def _on_list_changed(self):
+        self.LIST_CHANGED_SIGNAL.send(sender=self)
+
+    def update_names(self, relabel=False):
+        if relabel:
+            # sort self._line_profiles list according to visibility
+            rois, visibilities = [], []
+            #self._line_profiles = [lp for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._line_profiles), reverse=True)]
+            for (vis, roi) in sorted(zip(self.get_visibility_mask(), self._rois), reverse=True):
+                rois.append(roi)
+                visibilities.append(vis)
+
+            self._rois = rois
+            self._visibility_mask = visibilities
+
+        index = 0
+        for lp in self._rois:
+            self._names[lp.get_id()] = index
+            index += 1
+
+    def relabel(self):
+        self.update_names(relabel=True)
+        # label_no = 1
+        # for line_profile in self.get_line_profiles():
+        #     line_profile.set_id(label_no)
+        #     label_no += 1
+        self.LIST_CHANGED_SIGNAL.send(sender=self)
+
+class LineProfileHandler(BaseHandler):
+    def __init__(self, image_data=None, interpolation_order=3, image_name=None):
+        super(self.__class__, self).__init__()
         self.image = image_data
         self.image_name = image_name
         self.interpolation_order = interpolation_order
@@ -26,32 +65,26 @@ class LineProfileHandler(object):
         else:
             self.mdh = None
 
+    @property
+    def line_profiles(self):
+        return self._rois
+
+    @line_profiles.setter
+    def line_profiles(self, profiles):
+        self._rois = [p for p in profiles]  # type _rois as a list
+
+    def get_rois(self):
+        return self.get_line_profiles()
+
     def profiles_as_dict(self):
-        if self._line_profiles[-1].get_data() is None:
+        if self._rois[-1].get_data() is None:
             self.calculate_profiles()
 
         d = {}
-        for p in self._line_profiles:
+        for p in self._rois:
             d[p.get_id()] = p
 
         return d
-
-    def update_names(self, relabel=False):
-        if relabel:
-            # sort self._line_profiles list according to visibility
-            profiles, visibilities = [], []
-            #self._line_profiles = [lp for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._line_profiles), reverse=True)]
-            for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._line_profiles), reverse=True):
-                profiles.append(lp)
-                visibilities.append(vis)
-
-            self._line_profiles = profiles
-            self._visibility_mask = visibilities
-
-        index = 0
-        for lp in self.get_line_profiles():
-            self._names[lp.get_id()] = index
-            index += 1
 
     def LineProfile_from_array(self, parray, table_name=None):
         lp = rois.LineProfile(parray['r1'], parray['c1'], parray['r2'], parray['c2'],
@@ -63,10 +96,10 @@ class LineProfileHandler(object):
     def save_line_profiles(self, filename, tablename='profiles'):
         from PYME.IO import ragged
 
-        if self._line_profiles[-1].get_data() is None:
+        if self.line_profiles[-1].get_data() is None:
             self.calculate_profiles()
 
-        profs = ragged.RaggedCache(self._line_profiles)  # [lp.as_dict() for lp in self._line_profiles])
+        profs = ragged.RaggedCache(self.line_profiles)  # [lp.as_dict() for lp in self._line_profiles])
 
         profs.to_hdf(filename, tablename, mode='a')
 
@@ -89,14 +122,14 @@ class LineProfileHandler(object):
             lp.set_distance(parray[pi]['distance'])
             # self.add_line_profile(lp)
             # skip GUI calls and just add profile
-            self._line_profiles.append(lp)
+            self._rois.append(lp)
 
     def _load_profiles_from_dict(self, d, table_name_filter='line_profile'):
         profile_keys = [key for key in d.keys() if key.startswith(table_name_filter)]
         for key in profile_keys:
             # skip GUI calls and just add profile
             #try:
-            self._line_profiles.append(self.LineProfile_from_array(d[key], table_name=key))
+            self._rois.append(self.LineProfile_from_array(d[key], table_name=key))
             # assume that if something went wrong, something was pulled from the namespace which was not a profile
             #except:
             #    pass
@@ -135,22 +168,7 @@ class LineProfileHandler(object):
             self.calculate_profiles()
         except AttributeError:
             logger.debug('No image data provided to calculate profile from - may result in error if profile has not been calculated')
-        return self._line_profiles
-
-    def get_visibility_mask(self):
-        return self._visibility_mask
-
-    def change_visibility(self, index):
-        self._visibility_mask[index] = not self._visibility_mask[index]
-        self._on_list_changed()
-
-    def relabel_line_profiles(self):
-        self.update_names(relabel=True)
-        # label_no = 1
-        # for line_profile in self.get_line_profiles():
-        #     line_profile.set_id(label_no)
-        #     label_no += 1
-        LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
+        return self._rois
 
     def calculate_profiles(self):
         """
@@ -160,7 +178,7 @@ class LineProfileHandler(object):
         -------
 
         """
-        for lp in self._line_profiles:
+        for lp in self._rois:
             # skip if already calculated, or if profile was extracted from different image
             if (np.any(lp._profile) and lp._width == self._width) or (lp.get_image_name() != self.image_name):
                 continue
@@ -173,17 +191,17 @@ class LineProfileHandler(object):
             lp.set_distance(np.linspace(0, dist, lp.get_data().shape[0]))
 
     def add_line_profile(self, line_profile, update=True):
-        self._line_profiles.append(line_profile)
+        self._rois.append(line_profile)
         self._visibility_mask.append(line_profile.get_image_name() == self.image_name)
         if update:
             self.update_names(relabel=True)
-            LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
+            self.LIST_CHANGED_SIGNAL.send(sender=self)
 
 
     def remove_line_profile(self, index):
-        del self._line_profiles[index]
+        del self._rois[index]
         del self._visibility_mask[index]
-        LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
+        self.LIST_CHANGED_SIGNAL.send(sender=self)
 
     def set_line_profile_width(self, width):
         """
@@ -202,9 +220,6 @@ class LineProfileHandler(object):
     def get_line_profile_width(self):
         return self._width
 
-    def _on_list_changed(self):
-        LineProfileHandler.LIST_CHANGED_SIGNAL.send(sender=self)
-
     def get_image_names(self):
         """
 
@@ -218,15 +233,11 @@ class LineProfileHandler(object):
         return names
 
     def profile_by_index(self, index):
-        return self._line_profiles[index]
+        return self._rois[index]
 
-class RegionHandler(object):
-    LIST_CHANGED_SIGNAL = dispatch.Signal() #TODO - why is this a class level variable???
-
+class RegionHandler(BaseHandler):
     def __init__(self, image_data=None, interpolation_order=3):
-        self._rois = []
-        self._names = {}
-        self._visibility_mask = []
+        super(self.__class__, self).__init__()
         self.image = image_data
         self.interpolation_order = interpolation_order
     
@@ -264,41 +275,16 @@ class RegionHandler(object):
         self._visibility_mask[index] = not self._visibility_mask[index]
         self._on_list_changed()
 
-    def relabel_line_profiles(self):
-        self.update_names(relabel=True)
-        # label_no = 1
-        # for line_profile in self.get_line_profiles():
-        #     line_profile.set_id(label_no)
-        #     label_no += 1
-        RegionHandler.LIST_CHANGED_SIGNAL.send(sender=self)
-
     def add_roi(self, roi, gui=True):
         self._rois.append(roi)
         if gui:
             self._visibility_mask.append(True)
-            RegionHandler.LIST_CHANGED_SIGNAL.send(sender=self)
+            self.LIST_CHANGED_SIGNAL.send(sender=self)
 
     def remove_roi(self, index):
         del self._rois[index]
         del self._visibility_mask[index]
-        RegionHandler.LIST_CHANGED_SIGNAL.send(sender=self)
-
-    def update_names(self, relabel=False):
-        if relabel:
-            # sort self._rois list according to visibility
-            rois, visibilities = [], []
-            #self._line_profiles = [lp for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._line_profiles), reverse=True)]
-            for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._rois), reverse=True):
-                rois.append(lp)
-                visibilities.append(vis)
-        
-            self._rois = rois
-            self._visibility_mask = visibilities
-    
-        index = 0
-        for roi in self.get_rois():
-            self._names[roi.get_id()] = index
-            index += 1
+        self.LIST_CHANGED_SIGNAL.send(sender=self)
 
     def save_rois(self, filename, tablename='ROIs'):
         from PYME.IO import ragged
@@ -323,6 +309,3 @@ class RegionHandler(object):
         
             # if roi is not a dictionary, assume it is already the correct class
             self.add_roi(roi, gui=False)
-
-    def _on_list_changed(self):
-        RegionHandler.LIST_CHANGED_SIGNAL.send(sender=self)
