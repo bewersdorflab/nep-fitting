@@ -194,11 +194,6 @@ class LineProfile(BaseROI):
             'class': self.__class__.__name__
         }
         return d
-    
-    def to_JSON(self):
-        import json
-        d = self.as_dict()
-        return json.dumps(d)
 
 
 class RectangularROI(BaseROI):
