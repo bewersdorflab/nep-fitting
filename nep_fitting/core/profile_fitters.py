@@ -1,7 +1,7 @@
 
 from scipy import optimize
 import numpy as np
-import models
+from . import models
 
 class ProfileFitter(object):
     def __init__(self, line_profile_handler):
