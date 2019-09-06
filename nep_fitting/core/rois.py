@@ -167,15 +167,6 @@ class LineProfile(BaseROI):
     def get_coordinates(self):
         return self._distance
     
-    def set_id(self, identifier):
-        self._id = identifier
-    
-    def get_id(self):
-        return self._id
-    
-    def get_image_name(self):
-        return self._image_name
-    
     def as_array(self):
         try:
             plen = self._profile.shape[0]
