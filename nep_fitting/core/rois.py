@@ -196,6 +196,63 @@ class LineProfile(BaseROI):
         return d
 
 
+class MultiaxisProfile(BaseROI):
+    """
+
+    Container for multi-axis line profiles. Used by stack_fitters, for e.g. lateral and axial profile fitting
+    keeping structure parameters of the fitted object equal for both.
+
+    All profiles should intersect, though in this first implementation it is not enforced.
+
+    """
+
+    def __init__(self, profiles=(), positions=(), identifier=None, image_name=None):
+        """
+
+        Parameters
+        ----------
+
+        """
+        super(self.__class__, self).__init__(identifier=identifier, image_name=image_name)
+        self.data = (profiles, positions)
+
+    @property
+    def data(self):
+        return self.positions, self.profiles
+
+    @data.setter
+    def data(self, multiaxis_profiles):
+        positions, profiles = multiaxis_profiles
+        n_profiles = len(profiles)
+        assert len(positions) == n_profiles
+        self.n_profiles = n_profiles
+        self.positions = positions
+        self.profiles = profiles
+
+    @property
+    def widths(self):
+        return self._widths
+
+    @widths.setter
+    def widths(self, widths_px):
+        self._widths = [width for width in widths_px]  # keep widths as a list
+
+    @property
+    def profiles(self):
+        return self._profiles
+
+    @profiles.setter
+    def profiles(self, lines):
+        self._profiles = [line for line in lines]  # keep profiles as a list
+
+    @property
+    def positions(self):
+        return self._positions
+
+    @positions.setter
+    def positions(self, positions_nm):
+        self._positions = [pos for pos in positions_nm]
+
 class RectangularROI(BaseROI):
     def __init__(self, r1=None, c1=None, r2=None, c2=None, slice=0, identifier=None, image_name=None, data=None,
                  rows=None, columns=None):
