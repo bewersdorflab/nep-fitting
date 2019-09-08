@@ -3,7 +3,7 @@ import numpy as np
 from scipy import optimize
 from . import models
 
-class MultiaxisFitter(object):
+class PartialEnsembleFitter(object):
     def __init__(self, multi_axis_handler):
         """
 
@@ -23,16 +23,16 @@ class MultiaxisFitter(object):
         # flag fit factories where radius is squared in model and negative diameters can/should be returned as positive
         self._squared_radius = False
 
-    def _model_function(self, parameters, distance, ensemble_parameters=None):
+    def _model_function(self, parameters, distance, ensemble_parameters=None, pep_parameters=None):
         raise NotImplementedError
 
-    def _error_function(self, parameters, distance, data, ensemble_parameters=None):
+    def _error_function(self, parameters, distance, data, ensemble_parameters=None, pep_parameters=None):
         raise NotImplementedError
 
     def _calc_guess(self, line_profile):
         raise NotImplementedError
 
-    def fit_profiles(self, ensemble_parameters):
+    def fit_profiles(self, ensemble_parameters, pep_parameters=None):
         """
         Fit all line profiles, enforcing ensemble constraints. When used in conjunction with a multi_ensemble_handler
         ensemble values can be applied to specific profiles.
@@ -54,10 +54,25 @@ class MultiaxisFitter(object):
 
         all_residuals = []
         for pi in range(n):
-            p = self._handler
+            p = self._handler.profile_by_index(pi)
             guess = self._calc_guess(p)
+            # select function expecting the right fit parameters
+            try:
+                # p.list of tuples, (standard name, replacement name), e.g. [('diameter', 'diameter~11')]
+                base_names = [ex[0] for ex in p.parameter_exchanges]
+                error_function = getattr(self, '_error_function_pep_' + '_'.join(base_names))
+                # fix-up guess
+                guess = np.delete(guess, [self._base_parameter_indices[pname] for pname in base_names])
+                peps = (self.results[pi]['partial_ensemble_parameters'][ex[1]] for ex in p.parameter_exchanges)
+            except AttributeError:
+                # no pep parameters, choose standard error function for this model
+                error_function = self._error_function
+                peps = None
 
-            (res, cov_x, infodict, mesg, resCode) = optimize.leastsq(self._error_function, guess, args=(p.get_coordinates(), p.get_data(), ensemble_parameter), full_output=1)
+            (res, cov_x, infodict, mesg, resCode) = optimize.leastsq(error_function, guess,
+                                                                     args=(p.get_coordinates(), p.get_data(),
+                                                                           ensemble_parameters, peps),
+                                                                     full_output=1)
 
             # estimate uncertainties
             residuals = infodict['fvec'] # note that fvec is error function evaluation, or (data - model_function)
@@ -141,6 +156,8 @@ class MultiaxisFitter(object):
     def fit_partial_ensembles(self, ensemble_parameters):
         pep_guesses = self.get_pep_guesses()
         n_params = len(pep_guesses)
+        # store guesses into results array so we can get them by key easily when exchanging parameters from base model
+        self.results[:]['partial_ensemble_parameters'] = np.atleast_1d(pep_guesses).astype('f')
         fitpars = optimize.minimize(self.fit_profiles_mean, pep_guesses, args=ensemble_parameters, method='nelder-mead',
                                     options={'xtol': 1e-8, 'disp': True})
         res, cov_x, infodict, mesg, resCode = optimize.leastsq(self.fit_profiles, fitpars.x, args=ensemble_parameters,
@@ -155,6 +172,7 @@ class MultiaxisFitter(object):
         except TypeError:  # cov_x is None for singular matrices -> ~no curvature along at least one dimension
             errors = -1 * np.ones_like(res)
 
+        self.results[:]['partial_ensemble_parameters'] = np.atleast_1d(res.x).astype('f')
         self.results[:]['partial_ensemble_uncertainty'] = np.atleast_1d(errors).astype('f')
 
         return res
@@ -199,3 +217,47 @@ class MultiaxisFitter(object):
 
         return res
 
+class STEDTubuleSelfLabeling(MultiaxisFitter):
+    """
+    This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
+    """
+    def __init__(self, line_profile_handler):
+        super(self.__class__, self).__init__(line_profile_handler)
+
+        # [amplitude, tubule diameter, center position, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+        self._ensemble_parameter = 'PSF FWHM [nm]'
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
+
+    def _model_function(self, parameters, distance, ensemble_parameter=None):
+        try:
+            psf_fwhm = ensemble_parameter[0]
+        except (TypeError, IndexError):
+            psf_fwhm = ensemble_parameter
+
+        return models.lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
+
+    def _error_function(self, parameters, distance, data, ensemble_parameter=None, pep_parameters=None):
+        return data - self._model_function(parameters, distance, ensemble_parameter)
+
+    def _error_function_pep_diameter(self, parameters, distance, data, ensemble_parameter=None, pep_parameters=None):
+        parameters
+        return data - self._model_function(parameters, distance, ensemble_parameter)
+
+    def _calc_guess(self, line_profile):
+        # [amplitude, tubule diameter, center position, background]
+        profile = line_profile.get_data()
+        distance = line_profile.get_coordinates()
+        background = profile.min()
+        peak = profile.max()
+        amplitude = peak - background
+        center_position = distance[np.where(peak == profile)[0][0]]
+        tubule_diameter = np.sum(profile >= background + 0.5 * amplitude) * (distance[1] - distance[0])
+        return amplitude, tubule_diameter, center_position, background

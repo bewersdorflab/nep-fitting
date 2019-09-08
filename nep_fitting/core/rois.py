@@ -330,7 +330,7 @@ class RectangularROI(BaseROI):
 
 def partial_ensemble_class_factory(base_roi):
     class PartialEnsembleMixIn(base_roi):
-        def __init__(self, parameter_exchanges):
+        def __init__(self, parameter_exchanges=None, *args):
             """
 
             Parameters
@@ -340,6 +340,7 @@ def partial_ensemble_class_factory(base_roi):
                 replacement names should start with the standard name followed by a '~'
 
             """
+            base_roi.__init__(self, *args)
             self._parameter_exchanges = parameter_exchanges
 
         @property
@@ -353,6 +354,10 @@ def partial_ensemble_class_factory(base_roi):
                 replacement names should start with the standard name followed by a '~'
             """
             return self._parameter_exchanges
+
+        @parameter_exchanges.setter
+        def parameter_exchanges(self, exchanges):
+            self._parameter_exchanges = [pex for pex in exchanges]
 
     return PartialEnsembleMixIn
 
