@@ -37,7 +37,7 @@ class BaseHandler(object):
                 pass
         peps, indices = np.unique(params, return_index=True)
         self._partial_ensemble_parameters = {}
-        for ind in range(peps):
+        for ind in range(len(peps)):
             self._partial_ensemble_parameters[peps[ind]] = indices
 
     def get_visibility_mask(self):
@@ -257,6 +257,26 @@ class LineProfileHandler(BaseHandler):
 
     def profile_by_index(self, index):
         return self._rois[index]
+
+
+    def _load_multiaxis_from_csv(self, filenames, delimiter=',', distance_in_um=False):
+        from nep_fitting.core import rois
+        data = [np.genfromtxt(fn, delimiter=delimiter, usemask=True) for fn in filenames]
+        n = int(0.5 * data[0].shape[0])
+        for pi in range(n):
+            profiles = []
+            positions = []
+            for axis in range(len(data)):
+                if distance_in_um:
+                    positions.append(1e3 * data[axis][2 * pi, :].compressed())
+                else:
+                    positions.append(data[axis][2 * pi, :].compressed())
+                profiles.append(data[axis][2 * pi + 1, :].compressed())
+
+            p = rois.MultiaxisProfile(profiles, positions)
+            p.data = positions, profiles
+
+            self.add_line_profile(p, update=False)  # fixme- should update=True once we fix sorting in handler on py3
 
 class RegionHandler(BaseHandler):
     def __init__(self, image_data=None, interpolation_order=3):
