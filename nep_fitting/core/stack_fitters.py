@@ -217,7 +217,7 @@ class PartialEnsembleFitter(object):
 
         return res
 
-class STEDTubuleSelfLabeling(MultiaxisFitter):
+class STEDTubuleSelfLabeling(PartialEnsembleFitter):
     """
     This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
     """
