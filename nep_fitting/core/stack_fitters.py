@@ -330,7 +330,7 @@ class TwoAxisEnsembleBaseZTilt(TwoAxisEnsembleBase):
 
     def _calc_guess(self, multiaxis_profile):
         # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, background_xy, background_z]
-        return list(TwoAxisEnsembleBase._calc_guess(multiaxis_profile)) + [0]
+        return (TwoAxisEnsembleBase._calc_guess(self, multiaxis_profile)) + tuple([0])
 
 
 class TwoAxisLorentzSelfLabeling(TwoAxisEnsembleBase):
@@ -404,7 +404,7 @@ class TwoAxisLorentzFilledZTilt(TwoAxisEnsembleBaseZTilt):
 
         xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
         # parameters, distance, psf_fwhm
-        xy = models.lorentz_convolved_tubule_lumen_tilt(xy_pars, positions[0], xy_psf_fwhm)
+        xy = models.lorentz_convolved_tubule_lumen(xy_pars, positions[0], xy_psf_fwhm)
         z = models.lorentz_convolved_tubule_lumen_tilt(z_pars, positions[1], z_psf_fwhm)
 
         return xy, z
@@ -461,7 +461,7 @@ class TwoAxisGaussSelfLabelingZTilt(TwoAxisEnsembleBaseZTilt):
 
         xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
         # parameters, distance, psf_fwhm
-        xy = models.gauss_convolved_coated_tubule_selflabeling_tilt(xy_pars, positions[0], xy_psf_fwhm)
+        xy = models.gauss_convolved_coated_tubule_selflabeling(xy_pars, positions[0], xy_psf_fwhm)
         z = models.gauss_convolved_coated_tubule_selflabeling_tilt(z_pars, positions[1], z_psf_fwhm)
 
         return xy, z
@@ -481,7 +481,7 @@ class TwoAxisGaussFilledZTilt(TwoAxisEnsembleBaseZTilt):
 
         xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
         # parameters, distance, psf_fwhm
-        xy = models.gauss_convolved_tubule_lumen_approx_tilt(xy_pars, positions[0], xy_psf_fwhm)
+        xy = models.gauss_convolved_tubule_lumen_approx(xy_pars, positions[0], xy_psf_fwhm)
         z = models.gauss_convolved_tubule_lumen_approx_tilt(z_pars, positions[1], z_psf_fwhm)
 
         return xy, z
