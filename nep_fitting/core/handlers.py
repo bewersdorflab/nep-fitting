@@ -10,6 +10,14 @@ from nep_fitting.core import rois
 
 logger = logging.getLogger(__name__)
 
+def min_max(profiles):
+    normed = []
+    for profile in profiles:
+        peak, off = profile.max(), profile.min()
+        normed.append((profile - off) / (peak - off))
+    return normed
+
+
 class BaseHandler(object):
     def __init__(self):
         self.LIST_CHANGED_SIGNAL = dispatch.Signal()
@@ -259,7 +267,7 @@ class LineProfileHandler(BaseHandler):
         return self._rois[index]
 
 
-    def _load_multiaxis_from_csv(self, filenames, delimiter=',', distance_in_um=False):
+    def _load_multiaxis_from_csv(self, filenames, delimiter=',', distance_in_um=False, min_max_normalize=True):
         from nep_fitting.core import rois
         data = [np.genfromtxt(fn, delimiter=delimiter, usemask=True) for fn in filenames]
         n = int(0.5 * data[0].shape[0])
@@ -273,6 +281,8 @@ class LineProfileHandler(BaseHandler):
                     positions.append(data[axis][2 * pi, :].compressed())
                 profiles.append(data[axis][2 * pi + 1, :].compressed())
 
+            if min_max_normalize:
+                profiles = min_max(profiles)
             p = rois.MultiaxisProfile(profiles, positions)
             p.data = positions, profiles
 
