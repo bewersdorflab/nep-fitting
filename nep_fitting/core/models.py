@@ -211,6 +211,15 @@ def lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
 
     return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
 
+def lorentz_convolved_coated_tubule_selflabeling_tilt(parameters, distance, psf_fwhm):
+    amp, d_inner, center, bkgnd, bx = parameters
+
+    r_inner = 0.5 * d_inner
+    # SNAP diameter ~ 3.6 nm, Halo diameter ~ 4.4 nm, size of Dyes themselves ~ 1 nm, so 4.5 nm offset
+    r_outer = r_inner + 4.5  # [nm]
+
+    return lorentz_convolved_annulus([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm) + distance * bx
+
 def gauss_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
@@ -219,6 +228,15 @@ def gauss_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm):
     r_outer = r_inner + 4.5  # [nm]
 
     return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm)
+
+def gauss_convolved_coated_tubule_selflabeling_tilt(parameters, distance, psf_fwhm):
+    amp, d_inner, center, bkgnd, bx = parameters
+
+    r_inner = 0.5 * d_inner
+    # SNAP diameter ~ 3.6 nm, Halo diameter ~ 4.4 nm, size of Dyes themselves ~ 1 nm, so 4.5 nm offset
+    r_outer = r_inner + 4.5  # [nm]
+
+    return gauss_convolved_annulus_approx([amp, r_inner, center, bkgnd, r_outer], distance, psf_fwhm) + distance * bx
 
 def lorentz_convolved_coated_tubule_selflabeling_ne(parameters, distance):
     amp, d_inner, center, bkgnd, psf_fwhm = parameters
