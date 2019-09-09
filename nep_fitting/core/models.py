@@ -138,6 +138,10 @@ def gauss_convolved_tubule_lumen_approx_ne(p, distance):
 
     return amp * _gauss_convolved_semicircle_approx(r, t, sig) + bkgnd
 
+def gauss_convolved_tubule_lumen_approx_tilt(p, distance, psf_fwhm):
+    params = np.delete(p, -1)
+    return gauss_convolved_tubule_lumen_approx(params, distance, psf_fwhm) + p[-1] * distance
+
 def lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
@@ -323,6 +327,10 @@ def lorentz_convolved_tubule_lumen(p, x, gamma):
     amp = a / (0.25 * gamma * (-2 + 2 * np.sqrt(1 + (4 * r ** 2) / gamma ** 2)))
 
     return np.real((amp / 4) * (left + right) + c)
+
+def lorentz_convolved_tubule_lumen_tilt(p, x, gamma):
+    params = np.delete(p, -1)
+    return lorentz_convolved_tubule_lumen(params, x, gamma) + p[-1] * x
 
 def lorentz_convolved_tubule_lumen_ne(p, x):
     """

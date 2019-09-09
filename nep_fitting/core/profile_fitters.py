@@ -4,18 +4,15 @@ import numpy as np
 from . import models
 
 class ProfileFitter(object):
+    _fit_result_dtype = None  # to be overridden in derived class
+    _ensemble_parameter = None  # to be overridden in derived class
+
+    # flag fit factories where radius is squared in model and negative diameters can/should be returned as positive
+    _squared_radius = False
+
     def __init__(self, line_profile_handler):
         self._handler = line_profile_handler
-        # if any([lp.get_data() is None for lp in self._handler.get_line_profiles()]):
-        # self._handler.calculate_profiles()
-
         self.results = None
-
-        self._fit_result_dtype = None  # to be overridden in derived class
-        self._ensemble_parameter = None  # to be overridden in derived class
-
-        # flag fit factories where radius is squared in model and negative diameters can/should be returned as positive
-        self._squared_radius = False
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         """
