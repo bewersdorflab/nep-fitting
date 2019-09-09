@@ -137,7 +137,7 @@ class StackFitter(ProfileFitter):
         return np.mean(np.stack([(resi**2).mean() for resi in residuals]))
 
 
-    def ensemble_test(self, test_parameters):
+    def ensemble_test(self, psf_xy, psf_z):
         """
         Test ensemble parameters over an array of input values, returning the average mean-squared error for each test
 
@@ -152,6 +152,11 @@ class StackFitter(ProfileFitter):
         ensemble_error : structured ndarray
             array of average mean-squared error corresponding to the tests
 
+        Notes
+        -----
+        PYME tabular types don't currently support saving multidimensional structured arrays like ensemble_error. To
+        save to hdf, unravel (call ensemble_error.ravel()) before converting to PYME tabular and saving/.
+
         """
         tDict = dict(self._fit_result_dtype)
         dt = [('ensemble_parameter', tDict['ensemble_parameter']),
@@ -159,21 +164,22 @@ class StackFitter(ProfileFitter):
               ('fit_stddev', tDict['fitResults']),
               ('ensemble_meanMSE', '<f')]
 
-        num_tests = len(list(test_parameters.items())[0][1])
-        ensemble_error = np.zeros(num_tests, dtype=dt)
+        # num_tests = len(list(test_parameters.items())[0][1])
+        ensemble_error = np.zeros((psf_xy.shape[0], psf_z.shape[0]), dtype=dt)
 
-        keys = test_parameters.keys()
-        test_params = list(zip(*[test_parameters[key] for key in keys]))
-        for fi in range(num_tests):
-            ensemble_error[fi]['ensemble_meanMSE'] = np.mean(self.fit_profiles(ensemble_parameter=test_params[fi])**2)
-            res = self.results
-            for ti in tDict['fitResults']:
-                field = ti[0]
-                ensemble_error[fi]['fit_mean'][field] = res['fitResults'][field].mean()
-                ensemble_error[fi]['fit_stddev'][field] = res['fitResults'][field].std()
-            for ti in tDict['ensemble_parameter']:
-                field = ti[0]
-                ensemble_error[fi]['ensemble_parameter'][field] = res['ensemble_parameter'][field][0]
+        for xi in range(psf_xy.shape[0]):
+            for zi in range(psf_z.shape[0]):
+                test_params = (psf_xy[xi], psf_z[zi])
+
+                ensemble_error[xi, zi]['ensemble_meanMSE'] = np.mean(self.fit_profiles(ensemble_parameters=test_params)**2)
+                res = self.results
+                for ti in tDict['fitResults']:
+                    field = ti[0]
+                    ensemble_error[xi, zi]['fit_mean'][field] = res['fitResults'][field].mean()
+                    ensemble_error[xi, zi]['fit_stddev'][field] = res['fitResults'][field].std()
+                for ti in tDict['ensemble_parameter']:
+                    field = ti[0]
+                    ensemble_error[xi, zi]['ensemble_parameter'][field] = res['ensemble_parameter'][field][0]
 
 
         return ensemble_error
@@ -319,3 +325,194 @@ class MultiAxisLorentzSelfLabeling(StackFitter):
         d_z = np.sum(profiles[1] >= background[1] + 0.5 * amp_z) * abs(positions[1][1] - positions[1][0])
         tubule_diameter = 0.5 * (d_xy + d_z)
         return amp_xy, amp_z, tubule_diameter, center_xy, center_z, background[0], background[1]
+
+
+class MultiAxisLorentzSelfLabelingZTilt(StackFitter):
+    """
+    This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
+    """
+    def __init__(self, profile_handler):
+        super(self.__class__, self).__init__(profile_handler)
+
+        # [amplitude, tubule diameter, center_xy, center_z, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                  ('fitResults', [('amplitude_xy', '<f4'),
+                                  ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                  ('diameter', '<f4'),
+                                  ('center_xy', '<f4'), ('center_z', '<f4'),
+                                  ('background_xy', '<f4'),
+                                  ('background_z', '<f4'), # fixme - should be unnecessary
+                                  ('background_tilt_z', '<f4')]),
+                  ('fitError', [('amplitude_xy', '<f4'),
+                                ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                ('diameter', '<f4'),
+                                ('center_xy', '<f4'), ('center_z', '<f4'),
+                                ('background_xy', '<f4'),
+                                ('background_z', '<f4'), # fixme - should be unnecessary
+                                ('background_tilt_z', '<f4')])]
+
+        self._ensemble_parameters = ['XY PSF FWHM [nm]', 'Z PSF FWHM [nm]']
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
+
+    def _model_function(self, parameters, positions, ensemble_parameters):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, bgnd_xy, bgnd_z, tiltz] -> [amp, d_inner, center, bkgnd]
+        xy_pars = np.delete(parameters, [1, 4, 6, 7])  # remove z-specifics
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, bgnd_xy, bgnd_z, tiltz] -> [amp, d_inner, center, bkgnd, bx]
+        z_pars = np.delete(parameters, [0, 3, 5])  # remove x-specifics
+        #
+
+        xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
+        # parameters, distance, psf_fwhm
+        xy = models.lorentz_convolved_coated_tubule_selflabeling(xy_pars, positions[0], xy_psf_fwhm)
+        z = models.lorentz_convolved_coated_tubule_selflabeling_tilt(z_pars, positions[1], z_psf_fwhm)
+        # z = models.lorentz_convolved_coated_tubule_selflabeling(z_pars, positions[1], z_psf_fwhm)
+
+        return xy, z
+
+    def _error_function(self, parameters, positions, profiles, ensemble_parameters):
+        model = self._model_function(parameters, positions, ensemble_parameters)
+        return np.concatenate([profiles[0] - model[0], profiles[1] - model[1]])
+
+    def _calc_guess(self, multiaxis_profile):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, background_xy, background_z]
+        positions, profiles = multiaxis_profile.data
+        background = profiles[0].min(), profiles[1].min()
+        peak = profiles[0].max(), profiles[1].max()
+        amp_xy = peak[0] - background[0]
+        amp_z = peak[1] - background[1]
+        center_xy = positions[0][np.where(peak[0] == profiles[0])[0][0]]
+        center_z = positions[1][np.where(peak[1] == profiles[1])[0][0]]
+        d_xy = np.sum(profiles[0] >= background[0] + 0.5 * amp_xy) * abs(positions[0][1] - positions[0][0])
+        d_z = np.sum(profiles[1] >= background[1] + 0.5 * amp_z) * abs(positions[1][1] - positions[1][0])
+        tubule_diameter = 0.5 * (d_xy + d_z)
+        return amp_xy, amp_z, tubule_diameter, center_xy, center_z, background[0], background[1], 0
+
+
+class MultiAxisGaussSelfLabeling(StackFitter):
+    """
+    This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
+    """
+    def __init__(self, profile_handler):
+        super(self.__class__, self).__init__(profile_handler)
+
+        # [amplitude, tubule diameter, center_xy, center_z, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                  ('fitResults', [('amplitude_xy', '<f4'),
+                                  ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                  ('diameter', '<f4'),
+                                  ('center_xy', '<f4'), ('center_z', '<f4'),
+                                  ('background_xy', '<f4'),
+                                  ('background_z', '<f4')]),  # fixme - should be unnecessary
+                  ('fitError', [('amplitude_xy', '<f4'),
+                                ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                ('diameter', '<f4'),
+                                ('center_xy', '<f4'), ('center_z', '<f4'),
+                                ('background_xy', '<f4'),
+                                ('background_z', '<f4')])]  # fixme - should be unnecessary
+
+        self._ensemble_parameters = ['XY PSF FWHM [nm]', 'Z PSF FWHM [nm]']
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
+
+    def _model_function(self, parameters, positions, ensemble_parameters):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, bgnd_xy, bgnd_z] -> [amp, d_inner, center, bkgnd]
+        xy_pars = np.delete(parameters, [1, 4, 6])  # remove z-specifics
+        z_pars = np.delete(parameters, [0, 3, 5])  # remove x-specifics
+        #
+
+        xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
+        # parameters, distance, psf_fwhm
+        xy = models.gauss_convolved_coated_tubule_selflabeling(xy_pars, positions[0], xy_psf_fwhm)
+        z = models.gauss_convolved_coated_tubule_selflabeling(z_pars, positions[1], z_psf_fwhm)
+
+        return xy, z
+
+    def _error_function(self, parameters, positions, profiles, ensemble_parameters):
+        model = self._model_function(parameters, positions, ensemble_parameters)
+        return np.concatenate([profiles[0] - model[0], profiles[1] - model[1]])
+
+    def _calc_guess(self, multiaxis_profile):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, background_xy, background_z]
+        positions, profiles = multiaxis_profile.data
+        background = profiles[0].min(), profiles[1].min()
+        peak = profiles[0].max(), profiles[1].max()
+        amp_xy = peak[0] - background[0]
+        amp_z = peak[1] - background[1]
+        center_xy = positions[0][np.where(peak[0] == profiles[0])[0][0]]
+        center_z = positions[1][np.where(peak[1] == profiles[1])[0][0]]
+        d_xy = np.sum(profiles[0] >= background[0] + 0.5 * amp_xy) * abs(positions[0][1] - positions[0][0])
+        d_z = np.sum(profiles[1] >= background[1] + 0.5 * amp_z) * abs(positions[1][1] - positions[1][0])
+        tubule_diameter = 0.5 * (d_xy + d_z)
+        return amp_xy, amp_z, tubule_diameter, center_xy, center_z, background[0], background[1]
+
+
+class MultiAxisGaussSelfLabelingZTilt(StackFitter):
+    """
+    This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
+    """
+    def __init__(self, profile_handler):
+        super(self.__class__, self).__init__(profile_handler)
+
+        # [amplitude, tubule diameter, center_xy, center_z, background]
+        self._fit_result_dtype = [('index', '<i4'),
+                                  ('ensemble_parameter', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                                  ('ensemble_uncertainty', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                  ('fitResults', [('amplitude_xy', '<f4'),
+                                  ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                  ('diameter', '<f4'),
+                                  ('center_xy', '<f4'), ('center_z', '<f4'),
+                                  ('background_xy', '<f4'),
+                                  ('background_z', '<f4'), # fixme - should be unnecessary
+                                  ('background_tilt_z', '<f4')]),
+                  ('fitError', [('amplitude_xy', '<f4'),
+                                ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                ('diameter', '<f4'),
+                                ('center_xy', '<f4'), ('center_z', '<f4'),
+                                ('background_xy', '<f4'),
+                                ('background_z', '<f4'), # fixme - should be unnecessary
+                                ('background_tilt_z', '<f4')])]
+
+        self._ensemble_parameters = ['XY PSF FWHM [nm]', 'Z PSF FWHM [nm]']
+
+        # Lorentzian-convolved model functions have squared radii in model functions
+        self._squared_radius = True
+
+    def _model_function(self, parameters, positions, ensemble_parameters):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, bgnd_xy, bgnd_z, tiltz] -> [amp, d_inner, center, bkgnd]
+        xy_pars = np.delete(parameters, [1, 4, 6, 7])  # remove z-specifics
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, bgnd_xy, bgnd_z, tiltz] -> [amp, d_inner, center, bkgnd, bx]
+        z_pars = np.delete(parameters, [0, 3, 5])  # remove x-specifics
+        #
+
+        xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
+        # parameters, distance, psf_fwhm
+        xy = models.gauss_convolved_coated_tubule_selflabeling(xy_pars, positions[0], xy_psf_fwhm)
+        z = models.gauss_convolved_coated_tubule_selflabeling_tilt(z_pars, positions[1], z_psf_fwhm)
+        # z = models.lorentz_convolved_coated_tubule_selflabeling(z_pars, positions[1], z_psf_fwhm)
+
+        return xy, z
+
+    def _error_function(self, parameters, positions, profiles, ensemble_parameters):
+        model = self._model_function(parameters, positions, ensemble_parameters)
+        return np.concatenate([profiles[0] - model[0], profiles[1] - model[1]])
+
+    def _calc_guess(self, multiaxis_profile):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, background_xy, background_z]
+        positions, profiles = multiaxis_profile.data
+        background = profiles[0].min(), profiles[1].min()
+        peak = profiles[0].max(), profiles[1].max()
+        amp_xy = peak[0] - background[0]
+        amp_z = peak[1] - background[1]
+        center_xy = positions[0][np.where(peak[0] == profiles[0])[0][0]]
+        center_z = positions[1][np.where(peak[1] == profiles[1])[0][0]]
+        d_xy = np.sum(profiles[0] >= background[0] + 0.5 * amp_xy) * abs(positions[0][1] - positions[0][0])
+        d_z = np.sum(profiles[1] >= background[1] + 0.5 * amp_z) * abs(positions[1][1] - positions[1][0])
+        tubule_diameter = 0.5 * (d_xy + d_z)
+        return amp_xy, amp_z, tubule_diameter, center_xy, center_z, background[0], background[1], 0
