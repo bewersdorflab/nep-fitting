@@ -178,12 +178,24 @@ class LineProfileHandler(BaseHandler):
                 profs = ragged.RaggedVLArray(hdf, t.name)
                 for i in range(len(profs)):# in profs[:]:
                     p = profs[i]
-                    #print p.__class__
-                    #print p
-                    lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'],
-                                          identifier=p['identifier'], image_name=p['image_name'])
-                    lp.set_profile(p['profile'])
-                    lp.set_distance(p['distance'])
+                    if p['class'] == 'LineProfile':
+                        lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'],
+                                              identifier=p['identifier'], image_name=p['image_name'])
+                        lp.set_profile(p['profile'])
+                        lp.set_distance(p['distance'])
+                    else:  # p['class'] == 'MultiaxisProfile':
+                        profiles = []
+                        positions = []
+                        n_prof = 0
+                        for k in p.keys():
+                            if len(k.split('~')) > 0:
+                                n_prof = max(n_prof, int(k.split('~')[-1]))
+
+                        for pi in range(n_prof):
+                            profiles.append(p['profiles~%d' % pi])
+                            positions.append(p['positions~%d' % pi])
+                        lp = rois.MultiaxisProfile(profiles, positions, p['widths'], identifier=p['identifier'],
+                                                   image_name=p['image_name'])
 
                     self.add_line_profile(lp, False)
 

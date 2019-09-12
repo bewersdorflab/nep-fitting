@@ -206,7 +206,7 @@ class MultiaxisProfile(BaseROI):
 
     """
 
-    def __init__(self, profiles=(), positions=(), identifier=None, image_name=None):
+    def __init__(self, profiles=(), positions=(), widths=(), identifier=None, image_name=None):
         """
 
         Parameters
@@ -215,6 +215,7 @@ class MultiaxisProfile(BaseROI):
         """
         super(self.__class__, self).__init__(identifier=identifier, image_name=image_name)
         self.data = (profiles, positions)
+        self._widths = widths
 
     @property
     def data(self):
@@ -252,6 +253,18 @@ class MultiaxisProfile(BaseROI):
     @positions.setter
     def positions(self, positions_nm):
         self._positions = [pos for pos in positions_nm]
+
+    def as_dict(self):
+        positions, profiles = self.data
+        d = {
+            'widths': self.widths,
+            'image_name': self._image_name, 'identifier': self._id,
+            'class': self.__class__.__name__
+        }
+        for pi in range(len(positions)):
+            d['positions~%d' % pi] = np.asarray(positions[pi], dtype=float).tolist()
+            d['profiles~%d' % pi] = np.asarray(profiles[pi], dtype=float).tolist()
+        return d
 
 class RectangularROI(BaseROI):
     def __init__(self, r1=None, c1=None, r2=None, c2=None, slice=0, identifier=None, image_name=None, data=None,
