@@ -164,7 +164,7 @@ class LineProfileHandler(BaseHandler):
             #except:
             #    pass
 
-    def open_line_profiles(self, hdfFile):
+    def open_line_profiles(self, hdfFile, gui=True):
         import tables
         from PYME.IO import ragged
         if type(hdfFile) == tables.file.File:
@@ -188,19 +188,20 @@ class LineProfileHandler(BaseHandler):
                         positions = []
                         n_prof = 0
                         for k in p.keys():
-                            if len(k.split('~')) > 0:
-                                n_prof = max(n_prof, int(k.split('~')[-1]))
+                            if len(k.split('~')) > 1:
+                                n_prof = max(n_prof, int(k.split('~')[-1]) + 1)
 
                         for pi in range(n_prof):
-                            profiles.append(p['profiles~%d' % pi])
-                            positions.append(p['positions~%d' % pi])
+                            profiles.append(np.asarray(p['profiles~%d' % pi]))
+                            positions.append(np.asarray(p['positions~%d' % pi]))
                         lp = rois.MultiaxisProfile(profiles, positions, p['widths'], identifier=p['identifier'],
                                                    image_name=p['image_name'])
 
                     self.add_line_profile(lp, False)
 
-        self.update_names(relabel=True)
-        self._on_list_changed()
+        if gui:
+            self.update_names(relabel=True)
+            self._on_list_changed()
 
                 # TODO - check if we need to worry about multiple profiles with the same id
         hdf.close()
