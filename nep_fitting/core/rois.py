@@ -257,13 +257,15 @@ class MultiaxisProfile(BaseROI):
     def as_dict(self):
         positions, profiles = self.data
         d = {
-            'widths': self.widths,
             'image_name': self._image_name, 'identifier': self._id,
             'class': self.__class__.__name__
         }
         for pi in range(len(positions)):
             d['positions~%d' % pi] = np.asarray(positions[pi], dtype=float).tolist()
             d['profiles~%d' % pi] = np.asarray(profiles[pi], dtype=float).tolist()
+
+        if self.widths:
+            d['widths'] = np.array(self.widths).tolist()
         return d
 
 class RectangularROI(BaseROI):
