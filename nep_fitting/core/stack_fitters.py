@@ -332,6 +332,35 @@ class TwoAxisEnsembleBaseZTilt(TwoAxisEnsembleBase):
         # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, background_xy, background_z]
         return (TwoAxisEnsembleBase._calc_guess(self, multiaxis_profile)) + tuple([0])
 
+class TwoAxisEnsembleBaseTilt(TwoAxisEnsembleBase):
+    """
+
+    """
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm_xy', '<f4'), ('psf_fwhm_z', '<f4')]),
+                         ('fitResults', [('amplitude_xy', '<f4'),
+                                         ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                         ('diameter', '<f4'),
+                                         ('center_xy', '<f4'), ('center_z', '<f4'),
+                                         ('background_xy', '<f4'),
+                                         ('background_z', '<f4'),  # fixme - should be unnecessary
+                                         ('background_tilt_xy', '<f4'),
+                                         ('background_tilt_z', '<f4')]),
+                         ('fitError', [('amplitude_xy', '<f4'),
+                                       ('amplitude_z', '<f4'),  # fixme - should be unnecessary
+                                       ('diameter', '<f4'),
+                                       ('center_xy', '<f4'), ('center_z', '<f4'),
+                                       ('background_xy', '<f4'),
+                                       ('background_z', '<f4'),  # fixme - should be unnecessary
+                                       ('background_tilt_xy', '<f4'),
+                                       ('background_tilt_z', '<f4')])]
+
+    def _calc_guess(self, multiaxis_profile):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, background_xy, background_z,
+        # background_tilt_xy, background_tilt_z]
+        return (TwoAxisEnsembleBase._calc_guess(self, multiaxis_profile)) + tuple([0, 0])
+
 
 class TwoAxisLorentzSelfLabeling(TwoAxisEnsembleBase):
     """
@@ -405,6 +434,25 @@ class TwoAxisLorentzFilledZTilt(TwoAxisEnsembleBaseZTilt):
         xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
         # parameters, distance, psf_fwhm
         xy = models.lorentz_convolved_tubule_lumen(xy_pars, positions[0], xy_psf_fwhm)
+        z = models.lorentz_convolved_tubule_lumen_tilt(z_pars, positions[1], z_psf_fwhm)
+
+        return xy, z
+
+class TwoAxisLorentzFilledTilt(TwoAxisEnsembleBaseTilt):
+    """
+    """
+    _squared_radius = True
+
+    def _model_function(self, parameters, positions, ensemble_parameters):
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, bgnd_xy, bgnd_z, tiltxy, tiltz] -> [amp, d_inner, center, bkgnd]
+        xy_pars = np.delete(parameters, [1, 4, 6, 8])  # remove z-specifics
+        # [amplitude_xy, amplitude_z, tubule diameter, center_xy, center_z, bgnd_xy, bgnd_z, tiltxy, tiltz] -> [amp, d_inner, center, bkgnd, bx]
+        z_pars = np.delete(parameters, [0, 3, 5, 7])  # remove x-specifics
+        #
+
+        xy_psf_fwhm, z_psf_fwhm = ensemble_parameters
+        # parameters, distance, psf_fwhm
+        xy = models.lorentz_convolved_tubule_lumen_tilt(xy_pars, positions[0], xy_psf_fwhm)
         z = models.lorentz_convolved_tubule_lumen_tilt(z_pars, positions[1], z_psf_fwhm)
 
         return xy, z
