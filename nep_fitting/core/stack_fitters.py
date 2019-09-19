@@ -184,7 +184,7 @@ class StackFitter(ProfileFitter):
 
         return ensemble_error
 
-    def ensemble_fit(self, guess):
+    def ensemble_fit(self, guess, return_meanmse=False):
         """
 
         Parameters
@@ -216,6 +216,8 @@ class StackFitter(ProfileFitter):
 
         self.results[:]['ensemble_uncertainty'] = tuple(errors)
 
+        if return_meanmse:
+            return res, fitpars.fun
         return res
 
     def plot_results(self, plot_dir, x_bounds=None, y_bounds=None):
@@ -265,6 +267,106 @@ class StackFitter(ProfileFitter):
             plt.tight_layout()
             plt.savefig(plot_dir + '%s.pdf' % str(ind))
             fig.clf()
+
+class TwoAxisNonEnsembleBase(StackFitter):
+    _fit_result_dtype = [('index', '<i4'),
+                         ('fitResults', [('amplitude_xy', '<f4'), ('amplitude_z', '<f4'),
+                                         ('fwhm_xy', '<f4'), ('fwhm_z', '<f4'),
+                                         ('center_xy', '<f4'), ('center_z', '<f4'),
+                                         ('background_xy', '<f4'), ('background_z', '<f4')]),
+                         ('fitError', [('amplitude_xy', '<f4'), ('amplitude_z', '<f4'),
+                                       ('fwhm_xy', '<f4'), ('fwhm_z', '<f4'),
+                                       ('center_xy', '<f4'), ('center_z', '<f4'),
+                                       ('background_xy', '<f4'), ('background_z', '<f4')])]
+
+    _ensemble_parameters = None
+
+    def __init__(self, profile_handler):
+        StackFitter.__init__(self, profile_handler)
+
+    def _error_function(self, parameters, positions, profiles, ensemble_parameters=None):
+        model = self._model_function(parameters, positions, ensemble_parameters)
+        return np.concatenate([profiles[0] - model[0], profiles[1] - model[1]])
+
+    def _calc_guess(self, multiaxis_profile):
+        # [amplitude_xy, amplitude_z, fwhm_xy, fwhm_z, center_xy, center_z, background_xy, background_z]
+        positions, profiles = multiaxis_profile.data
+        background = profiles[0].min(), profiles[1].min()
+        peak = profiles[0].max(), profiles[1].max()
+        amp_xy = peak[0] - background[0]
+        amp_z = peak[1] - background[1]
+        center_xy = positions[0][np.where(peak[0] == profiles[0])[0][0]]
+        center_z = positions[1][np.where(peak[1] == profiles[1])[0][0]]
+        fwhm_xy = np.sum(profiles[0] >= background[0] + 0.5 * amp_xy) * abs(positions[0][1] - positions[0][0])
+        fwhm_z = np.sum(profiles[1] >= background[1] + 0.5 * amp_z) * abs(positions[1][1] - positions[1][0])
+        return amp_xy, amp_z, fwhm_xy, fwhm_z, center_xy, center_z, background[0], background[1]
+
+    def plot_results(self, plot_dir, x_bounds=None, y_bounds=None):
+        """
+
+        Parameters
+        ----------
+        plot_dir : str
+            path to directory where pdfs of plots should be saved
+        x_bounds : dict
+            item-value pairs for x bounds in order to overwrite default pyplot auto-settings. Should be of the form
+            {'xmin': float, 'xmax': float}
+        y_bounds : dict
+            item-value pairs to y bounds in order to overwrite default pyplot auto-settings. Should be of the form
+            {'ymin': foat, 'ymax': float}
+
+        Returns
+        -------
+
+        """
+        import matplotlib.pyplot as plt
+
+        res = self.results
+
+        fig = plt.figure()
+        for ind in range(self._handler.n):
+            positions, profiles = self._handler.profile_by_index(ind).data
+            interpolated_coords = [np.linspace(positions[ii].min(), positions[ii].max(), len(positions[ii])*10) for ii in range(len(positions))]
+            for pi, prof in enumerate(profiles):
+                plt.scatter(positions[pi], prof, label='Cross-section')
+                # try:
+                plt.plot(interpolated_coords[pi],
+                         self._model_function(res[ind]['fitResults'].tolist(), interpolated_coords, None)[pi],
+                         label='Fit')
+            if x_bounds:
+                plt.xlim(**x_bounds)
+            if y_bounds:
+                plt.ylim(**y_bounds)
+            plt.xlabel('Position [nm]', fontsize=26)
+            plt.ylabel('Amplitude [ADU]', fontsize=26)
+            plt.title('XY FWHM: %.2f nm, Z FWHM: %.2f nm'  % (res[ind]['fitResults']['fwhm_xy'],
+                                                              res[ind]['fitResults']['fwhm_z']))
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(plot_dir + '%s.pdf' % str(ind))
+            fig.clf()
+
+class TwoAxisBasicLorentzian(TwoAxisNonEnsembleBase):
+    def _model_function(self, parameters, positions, ensemble_parameters=None):
+        # [amplitude_xy, amplitude_z, fwhm_xy, fwhm_z, center_xy, center_z, background_xy, background_z] -> [amp, fwhm, x0, bkgnd]
+        xy_pars = np.delete(parameters, [1, 3, 5, 7])  # remove z-specifics
+        z_pars = np.delete(parameters, [0, 2, 4, 6])  # remove x-specifics
+
+        xy = models.naive_lorentzian(xy_pars, positions[0])
+        z = models.naive_lorentzian(z_pars, positions[1])
+
+        return xy, z
+
+class TwoAxisBasicGaussian(TwoAxisNonEnsembleBase):
+    def _model_function(self, parameters, positions, ensemble_parameters=None):
+        # [amplitude_xy, amplitude_z, fwhm_xy, fwhm_z, center_xy, center_z, background_xy, background_z] -> [amp, fwhm, x0, bkgnd]
+        xy_pars = np.delete(parameters, [1, 3, 5, 7])  # remove z-specifics
+        z_pars = np.delete(parameters, [0, 2, 4, 6])  # remove x-specifics
+
+        xy = models.naive_gaussian(xy_pars, positions[0])
+        z = models.naive_gaussian(z_pars, positions[1])
+
+        return xy, z
 
 class TwoAxisEnsembleBase(StackFitter):
     _fit_result_dtype = [('index', '<i4'),
