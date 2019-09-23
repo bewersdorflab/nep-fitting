@@ -13,7 +13,7 @@ from nep_fitting.core.handlers import LineProfileHandler, RegionHandler
 class TestEnsembleParameters(ModuleBase):
     inputName = Input('profiles')
 
-    fit_type = CStr(profile_fitters.fitters.keys()[0])
+    fit_type = CStr(list(profile_fitters.fitters.keys())[0])
     ensemble_test_values = DictStrList({'psf_fwhm': [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]})
 
     outputName = Output('fit_results')
@@ -112,7 +112,7 @@ class EnsembleFitProfiles(ModuleBase):
 
     @property
     def _fitter_choices(self):
-        return profile_fitters.ensemble_fitters.keys()
+        return list(profile_fitters.ensemble_fitters.keys())
 
 
     @property
