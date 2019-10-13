@@ -40,8 +40,9 @@ class LineProfileHandler(object):
         if relabel:
             # sort self._line_profiles list according to visibility
             profiles, visibilities = [], []
-            #self._line_profiles = [lp for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._line_profiles), reverse=True)]
-            for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._line_profiles), reverse=True):
+            # include current position in tuple to sort to tie-break between vis (or hidden) so we don't < line_profile
+            c_ind = range(len(self._line_profiles))
+            for (vis, dummy, lp) in sorted(zip(self.get_visibility_mask(), c_ind, self._line_profiles), reverse=True):
                 profiles.append(lp)
                 visibilities.append(vis)
 
