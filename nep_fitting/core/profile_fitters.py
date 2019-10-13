@@ -4,18 +4,18 @@ from scipy import optimize
 from .models import *
 
 class ProfileFitter(object):
+    _fit_result_dtype = None
+    _ensemble_parameter = None
+
+    # flag fit factories where radius is squared in model and negative diameters can/should be returned as positive
+    _squared_radius = False
+
     def __init__(self, line_profile_handler):
         self._handler = line_profile_handler
         # if any([lp.get_data() is None for lp in self._handler.get_line_profiles()]):
         # self._handler.calculate_profiles()
 
         self.results = None
-
-        self._fit_result_dtype = None  # to be overridden in derived class
-        self._ensemble_parameter = None  # to be overridden in derived class
-
-        # flag fit factories where radius is squared in model and negative diameters can/should be returned as positive
-        self._squared_radius = False
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         """
@@ -358,15 +358,18 @@ class ProfileFitter(object):
 
 
 class Gaussian(ProfileFitter):
+    # [amplitude, psf_fwhm, center position, background]]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = None
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
 
-        # [amplitude, psf_fwhm, center position, background]]
-        self._fit_result_dtype = [('index', '<i4'),
-                  ('fitResults', [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = None
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -392,15 +395,17 @@ class Gaussian(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background
 
 class Lorentzian(ProfileFitter):
+    # [amplitude, psf_fwhm, center position, background]]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = None
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, psf_fwhm, center position, background]]
-        self._fit_result_dtype = [('index', '<i4'),
-                  ('fitResults', [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('psf_fwhm', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = None
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -439,20 +444,22 @@ class SimpleFWHM(ProfileFitter):
 
 
 class STEDTubuleMembraneAntibody(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
+
+    # Lorentzian-convolved model functions have squared radii in model functions
+    _squared_radius = True
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
-
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -477,18 +484,22 @@ class STEDTubuleMembraneAntibody(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background
 
 class STEDTubuleMembraneAntibody_ne(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')])]
+
+    _ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+    # Lorentzian-convolved model functions have squared radii in model functions
+    _squared_radius = True
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
-
-        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
-
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -513,19 +524,19 @@ class STEDTubuleMembraneAntibody_ne(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background, psf_fwhm
 
 class STEDMicrotubuleAntibody(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
+
+    _squared_radius = False  # While this is Lorentz-convolved, it doesn't have a fitted radius
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
-
-        self._squared_radius = False # While this is Lorentz-convoled, it doesn't have a fitted radius
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -552,20 +563,22 @@ class STEDTubuleSelfLabeling(ProfileFitter):
     """
     This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
     """
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
+
+    # Lorentzian-convolved model functions have squared radii in model functions
+    _squared_radius = True
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
-
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -593,20 +606,24 @@ class STEDTubuleSelfLabeling_ne(ProfileFitter):
     """
     This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
     """
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')])]
+
+    _ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+    # Lorentzian-convolved model functions have squared radii in model functions
+    _squared_radius = True
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
-
-        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
-
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -631,20 +648,22 @@ class STEDTubuleSelfLabeling_ne(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background, psf_fwhm
 
 class STEDTubuleLumen(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
+
+    # Lorentzian-convolved model functions have squared radii in model functions
+    _squared_radius = True
+
     def __init__(self, line_profile_handler):
         super(STEDTubuleLumen, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
-
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -668,20 +687,24 @@ class STEDTubuleLumen(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background
 
 class STEDTubuleLumen_ne(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')])]
+
+    _ensemble_parameter = None  # 'PSF FWHM [nm]'
+
+    # Lorentzian-convolved model functions have squared radii in model functions
+    _squared_radius = True
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
-
-        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
-
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -709,20 +732,22 @@ class STEDTubuleMembrane(ProfileFitter):
     """
     Depreciated thin-membrane model
     """
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
+
+    # Lorentzian-convolved model functions have squared radii in model functions
+    _squared_radius = True
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
-
-        # Lorentzian-convolved model functions have squared radii in model functions
-        self._squared_radius = True
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -752,19 +777,21 @@ class GaussTubuleAnnulus(ProfileFitter):
     """
     Fitter with flexible annulus thickness (modified as instance attribute)
     """
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
+
     def __init__(self, line_profile_handler, annulus_thickness):
         super(self.__class__, self).__init__(line_profile_handler)
 
         self.annulus_thickness = annulus_thickness
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -826,17 +853,18 @@ class GaussTubuleAnnulus(ProfileFitter):
         return mmse, diameters
 
 class GaussTubuleMembraneAntibody(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -861,15 +889,19 @@ class GaussTubuleMembraneAntibody(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background
 
 class GaussTubuleMembraneAntibody_ne(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')])]
+
+    _ensemble_parameter = None  # 'PSF FWHM [nm]'
+
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
-
-        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -895,16 +927,15 @@ class GaussTubuleMembraneAntibody_ne(ProfileFitter):
 
 class GaussMicrotubuleAntibody(ProfileFitter):
     def __init__(self, line_profile_handler):
-        super(self.__class__, self).__init__(line_profile_handler)
-
         # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
+        _fit_result_dtype = [('index', '<i4'),
                                   ('ensemble_parameter', [('psf_fwhm', '<f4')]),
                                   ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
                   ('fitResults', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')]),
                   ('fitError', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')])]
 
-        self._ensemble_parameter = 'PSF FWHM [nm]'
+        _ensemble_parameter = 'PSF FWHM [nm]'
+        super(self.__class__, self).__init__(line_profile_handler)
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -931,17 +962,20 @@ class GaussTubuleSelfLabeling(ProfileFitter):
     """
     This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
     """
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
 
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
 
-        self._ensemble_parameter = 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -969,17 +1003,20 @@ class GaussTubuleSelfLabeling_ne(ProfileFitter):
     """
     This is for use with SNAP-tag and Halo tag labels, which result in an annulus of roughly 5 nm thickness
     """
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')])]
+
+    _ensemble_parameter = None  # 'PSF FWHM [nm]'
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
-
-        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
@@ -1004,17 +1041,18 @@ class GaussTubuleSelfLabeling_ne(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background, psf_fwhm
 
 class GaussTubuleLumen(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+
+    _ensemble_parameter = 'PSF FWHM [nm]'
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4')])]
-
-        self._ensemble_parameter = 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         try:
@@ -1038,17 +1076,20 @@ class GaussTubuleLumen(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background
 
 class GaussTubuleLumen_ne(ProfileFitter):
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')]),
+                         ('fitError',
+                          [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'),
+                           ('psf_fwhm', '<f4')])]
+
+    _ensemble_parameter = None  # 'PSF FWHM [nm]'
     def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
-
-        # [amplitude, tubule diameter, center position, background]
-        self._fit_result_dtype = [('index', '<i4'),
-                                  # ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  # ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('diameter', '<f4'), ('center', '<f4'), ('background', '<f4'), ('psf_fwhm', '<f4')])]
-
-        self._ensemble_parameter = None  # 'PSF FWHM [nm]'
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
         if ensemble_parameter:
