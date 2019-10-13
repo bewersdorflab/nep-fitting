@@ -21,8 +21,10 @@ def get_ground(fitter):
 
     Returns
     -------
-    ground: 1darray
+    ground: list
         default parameters from GROUND dictionary in the right order for the specified fitter
+    ens: list
+        optional return for ensemble fit classes, same as ground return but for ensemble parameters
 
     """
     for d in fitter._fit_result_dtype:
