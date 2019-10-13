@@ -926,15 +926,15 @@ class GaussTubuleMembraneAntibody_ne(ProfileFitter):
         return amplitude, tubule_diameter, center_position, background, psf_fwhm
 
 class GaussMicrotubuleAntibody(ProfileFitter):
-    def __init__(self, line_profile_handler):
-        # [amplitude, tubule diameter, center position, background]
-        _fit_result_dtype = [('index', '<i4'),
-                                  ('ensemble_parameter', [('psf_fwhm', '<f4')]),
-                                  ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
-                  ('fitResults', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')]),
-                  ('fitError', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')])]
+    # [amplitude, tubule diameter, center position, background]
+    _fit_result_dtype = [('index', '<i4'),
+                         ('ensemble_parameter', [('psf_fwhm', '<f4')]),
+                         ('ensemble_uncertainty', [('psf_fwhm', '<f4')]),
+                         ('fitResults', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')]),
+                         ('fitError', [('amplitude', '<f4'), ('center', '<f4'), ('background', '<f4')])]
 
-        _ensemble_parameter = 'PSF FWHM [nm]'
+    _ensemble_parameter = 'PSF FWHM [nm]'
+    def __init__(self, line_profile_handler):
         super(self.__class__, self).__init__(line_profile_handler)
 
     def _model_function(self, parameters, distance, ensemble_parameter=None):
