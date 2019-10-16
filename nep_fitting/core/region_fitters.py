@@ -79,8 +79,8 @@ class RegionFitter(object):
                 errors = -1 * np.ones_like(res)
             self.results[ri]['index'] = ri
             self.results[ri]['ensemble_parameter'] = np.atleast_1d(ensemble_parameter).astype('f')
-            self.results[ri]['fitResults'] = res.astype('f')
-            self.results[ri]['fitError'] = errors.astype('f')
+            self.results[ri]['fitResults'] = tuple(res.astype('f'))
+            self.results[ri]['fitError'] = tuple(errors.astype('f'))
 
             mse[ri] = np.mean(residuals**2)
 
