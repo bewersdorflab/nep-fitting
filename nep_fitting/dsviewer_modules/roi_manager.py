@@ -223,7 +223,7 @@ class RegionManager:
     def _on_save(self, event=None):
         from PYME.IO.FileUtils import nameUtils
         fdialog = wx.FileDialog(None, 'Save/Append ROIs to ...',
-                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.SAVE,
+                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.FD_SAVE,
                                 defaultDir=nameUtils.genHDFDataFilepath())  # , defaultFile=defFile)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):

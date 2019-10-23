@@ -290,7 +290,7 @@ class LineProfilesOverlay:
         #print('Ensemble parameter fitted as: %3.2f+-%3.2f nm' %(res['ensemble_parameter'][0], res['ensemble_uncertainty'][0]))
 
         fdialog = wx.FileDialog(None, 'Save results as ...',
-                                wildcard='hdf (*.hdf)|*.hdf', style=wx.SAVE,
+                                wildcard='hdf (*.hdf)|*.hdf', style=wx.FD_SAVE,
                                 defaultDir=nameUtils.genShiftFieldDirectoryPath())  # , defaultFile=defFile)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
@@ -361,7 +361,7 @@ class LineProfilesOverlay:
             context['img_data'] = self._dsviewer.view.GrabPNGToBuffer()
 
         fdialog = wx.FileDialog(None, 'Save report as ...',
-                                wildcard='html (*.html)|*.html', style=wx.SAVE,
+                                wildcard='html (*.html)|*.html', style=wx.FD_SAVE,
                                 defaultDir=nameUtils.genShiftFieldDirectoryPath())
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
@@ -392,7 +392,7 @@ class LineProfilesOverlay:
         res = rec.execute()
 
         fdialog = wx.FileDialog(None, 'Save results as ...',
-                                wildcard='hdf (*.hdf)|*.hdf', style=wx.SAVE,
+                                wildcard='hdf (*.hdf)|*.hdf', style=wx.FD_SAVE,
                                 defaultDir=nameUtils.genShiftFieldDirectoryPath())  # , defaultFile=defFile)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
@@ -425,7 +425,7 @@ class LineProfilesOverlay:
         import os
         
         fdialog = wx.FileDialog(None, 'Save/Append Line Profiles to ...',
-                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.SAVE,
+                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.FD_SAVE,
                                 defaultDir=nameUtils.genHDFDataFilepath())  # , defaultFile=defFile)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
@@ -439,7 +439,7 @@ class LineProfilesOverlay:
         # TODO fill in this function
         from PYME.IO.FileUtils import nameUtils
         fdialog = wx.FileDialog(None, 'Load Line Profiles from ...',
-                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.OPEN)
+                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.FD_OPEN)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
