@@ -76,7 +76,7 @@ class TestEnsembleParameters(ModuleBase):
 class EnsembleFitProfiles(ModuleBase):
     inputName = Input('line_profiles')
 
-    fit_type = CStr(profile_fitters.ensemble_fitters.keys()[0])
+    fit_type = CStr(list(profile_fitters.ensemble_fitters.keys())[0])
     ensemble_parameter_guess = Float(50.)
     hold_ensemble_parameter_constant = Bool(False)
 
@@ -158,7 +158,7 @@ class EnsembleFitProfiles(ModuleBase):
 class FitProfiles(ModuleBase):
     inputName = Input('profiles')
 
-    fit_type = CStr(profile_fitters.fitters.keys()[0])
+    fit_type = CStr(list(profile_fitters.fitters.keys())[0])
 
     outputName = Output('fit_results')
 

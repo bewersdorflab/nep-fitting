@@ -210,7 +210,7 @@ class ProfileFitter(object):
               ('fit_stddev', tDict['fitResults']),
               ('ensemble_meanMSE', '<f')]
 
-        num_tests = len(test_parameters.items()[0][1])
+        num_tests = len(list(test_parameters.items())[0][1])
         ensemble_error = np.zeros(num_tests, dtype=dt)
         try:
             for fi in range(num_tests):

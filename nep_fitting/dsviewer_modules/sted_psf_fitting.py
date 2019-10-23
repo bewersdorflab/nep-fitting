@@ -275,7 +275,7 @@ class LineProfilesOverlay:
 
         rec = ModuleCollection()
         fitting_module = nep_fits.EnsembleFitProfiles(rec, inputName='line_profiles',
-                                                           fit_type=profile_fitters.ensemble_fitters.keys()[0],
+                                                           fit_type=list(profile_fitters.ensemble_fitters.keys())[0],
                                                            hold_ensemble_parameter_constant=False, outputName='output')
         rec.add_module(fitting_module)
 
@@ -337,7 +337,7 @@ class LineProfilesOverlay:
         rec = ModuleCollection()
 
         rec.add_module(nep_fits.TestEnsembleParameters(rec, inputName='line_profiles',
-                                                           fit_type=profile_fitters.ensemble_fitters.keys()[0],
+                                                           fit_type=list(profile_fitters.ensemble_fitters.keys())[0],
                                                            hold_ensemble_parameter_constant=False, outputName='output'))
 
         # populate namespace with current profiles
@@ -382,7 +382,7 @@ class LineProfilesOverlay:
         rec = ModuleCollection()
 
         rec.add_module(nep_fits.FitProfiles(rec, inputName='line_profiles',
-                                                   fit_type=profile_fitters.fitters.keys()[0], outputName='output'))
+                                                   fit_type=list(profile_fitters.fitters.keys())[0], outputName='output'))
 
         # populate namespace with current profiles
         rec.namespace['line_profiles'] = RaggedCache(self._line_profile_handler.get_line_profiles())
