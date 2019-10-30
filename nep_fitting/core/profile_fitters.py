@@ -225,7 +225,7 @@ class ProfileFitter(object):
                     ensemble_error[fi]['ensemble_parameter'][field] = res['ensemble_parameter'][field][0]
         except KeyError:  # TODO - remove flexible input, only accept test_parameters as dict
             keys = test_parameters.keys()
-            test_params = zip(*[test_parameters[key] for key in keys])
+            test_params = list(zip(*[test_parameters[key] for key in keys]))
             for fi in range(num_tests):
                 ensemble_error[fi]['ensemble_meanMSE'] = np.mean(self.fit_profiles(ensemble_parameter=test_params[fi])**2)
                 res = self.results
