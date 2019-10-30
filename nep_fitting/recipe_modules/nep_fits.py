@@ -43,7 +43,7 @@ class TestEnsembleParameters(ModuleBase):
 
     @property
     def _fitter_choices(self):
-        return profile_fitters.ensemble_fitters.keys()
+        return list(profile_fitters.ensemble_fitters.keys())
 
 
     @property
@@ -187,7 +187,7 @@ class FitProfiles(ModuleBase):
 
     @property
     def _fitter_choices(self):
-        return profile_fitters.fitters.keys()
+        return list(profile_fitters.fitters.keys())
 
 
     @property
@@ -250,7 +250,7 @@ class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved so
 
     @property
     def _fitter_choices(self):
-        return region_fitters.ensemble_fitters.keys() #FIXME???
+        return list(region_fitters.ensemble_fitters.keys()) #FIXME???
 
 
     @property
