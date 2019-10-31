@@ -33,7 +33,7 @@ def get_schematic(fit_type):
     schem_filename = schematic_files.get(fit_type, None)
     
     if schem_filename:
-        with open(os.path.join(os.path.split(__file__)[0], schem_filename), mode='r') as f:
+        with open(os.path.join(os.path.split(__file__)[0], schem_filename), mode='r', encoding='utf-8') as f:
             s = f.read()
             
         return s #.encode('utf-8')
