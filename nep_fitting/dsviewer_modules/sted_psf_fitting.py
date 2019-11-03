@@ -502,7 +502,7 @@ class LineProfileList(wx.ListCtrl):
         if col == 0:
             return str(index) + ': ' + str(lp_id)
         if col == 1:
-            return self._line_profile_handler._visibility_mask[index]
+            return str(self._line_profile_handler._visibility_mask[index])
         else:
             return ''
 
