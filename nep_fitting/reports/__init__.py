@@ -36,6 +36,6 @@ def get_schematic(fit_type):
         with open(os.path.join(os.path.split(__file__)[0], schem_filename), mode='r', encoding='utf-8') as f:
             s = f.read()
             
-        return s #.encode('utf-8')
+        return s.encode('utf-8')
     else:
         return None
