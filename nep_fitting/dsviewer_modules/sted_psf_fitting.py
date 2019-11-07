@@ -316,11 +316,12 @@ class LineProfilesOverlay:
                        'results' : res,
                        'filename' : self._dsviewer.image.filename,
                        'fittype' : res.mdh['EnsembleFitProfiles.FitType'], #ef_mod.fit_type,
-                       'img_schematic' : reports.get_schematic(res.mdh['EnsembleFitProfiles.FitType'])}
+                       'img_schematic' : reports.img_as_strb64(reports.get_schematic(res.mdh['EnsembleFitProfiles.FitType']))
+            }
             handler_names = self._line_profile_handler.get_image_names()
             if (len(handler_names) == 1) and (handler_names[0] == self.image_name):
                 # if there's only a single image, include it in the report
-                context['img_data'] = self._dsviewer.view.GrabPNGToBuffer()
+                context['img_data'] = reports.img_as_strb64(self._dsviewer.view.GrabPNGToBuffer())
             
             reports.generate_and_save(htmlfn, context, template_name='single_data.html')
             
@@ -333,7 +334,6 @@ class LineProfilesOverlay:
         from nep_fitting import reports
         from PYME.IO.ragged import RaggedCache
         import webbrowser
-        import base64
 
         rec = ModuleCollection()
 
@@ -354,12 +354,12 @@ class LineProfilesOverlay:
             'results': res,
             'filename': self._dsviewer.image.filename,
             'fittype': res.mdh['TestEnsembleParameters.FitType'],
-            'img_schematic': str(base64.b64encode(reports.get_schematic(res.mdh['TestEnsembleParameters.FitType']))).lstrip("b'").rstrip("'")
+            'img_schematic': reports.img_as_strb64(reports.get_schematic(res.mdh['TestEnsembleParameters.FitType']))
         }
         handler_names = self._line_profile_handler.get_image_names()
         if (len(handler_names) == 1) and (handler_names[0] == self.image_name):
             # if there's only a single image, include it in the report
-            context['img_data'] = str(base64.b64encode(self._dsviewer.view.GrabPNGToBuffer())).lstrip("b'").rstrip("'")
+            context['img_data'] = reports.img_as_strb64(self._dsviewer.view.GrabPNGToBuffer())
 
         fdialog = wx.FileDialog(None, 'Save report as ...',
                                 wildcard='html (*.html)|*.html', style=wx.FD_SAVE,
@@ -411,11 +411,12 @@ class LineProfilesOverlay:
             context = {'results': res,
                        'filename': self._dsviewer.image.filename,
                        'fittype': res.mdh['FitProfiles.FitType'],
-                       'img_schematic': reports.get_schematic(res.mdh['FitProfiles.FitType'])}
+                       'img_schematic': reports.img_as_strb64(reports.get_schematic(res.mdh['FitProfiles.FitType']))
+            }
             handler_names = self._line_profile_handler.get_image_names()
             if (len(handler_names) == 1) and (handler_names[0] == self.image_name):
                 # if there's only a single image, include it in the report
-                context['img_data'] = self._dsviewer.view.GrabPNGToBuffer()
+                context['img_data'] = reports.img_as_strb64(self._dsviewer.view.GrabPNGToBuffer())
 
             reports.generate_and_save(htmlfn, context, template_name='single_data.html')
 

@@ -36,6 +36,31 @@ def get_schematic(fit_type):
         with open(os.path.join(os.path.split(__file__)[0], schem_filename), mode='r', encoding='utf-8') as f:
             s = f.read()
             
-        return s.encode('utf-8')
+        return s  #.encode('utf-8')
     else:
         return None
+
+def img_as_strb64(img):
+    """
+    odd helper function
+
+    Parameters
+    ----------
+    img: str, bytes, or None
+        Image as str, e.g. as returned by reports.get_schematic. None will short circuit the function
+
+    Returns
+    -------
+    img: str
+        str representation of the image in b64 encoding
+
+    """
+    if img is None:
+        return None
+
+    try:
+        img = bytes(img, encoding='utf-8')
+    except TypeError:
+        pass
+
+    return str(base64.b64encode(img)).lstrip("b'").rstrip("'")
