@@ -167,15 +167,6 @@ class LineProfile(BaseROI):
     def get_coordinates(self):
         return self._distance
     
-    def set_id(self, identifier):
-        self._id = identifier
-    
-    def get_id(self):
-        return self._id
-    
-    def get_image_name(self):
-        return self._image_name
-    
     def as_array(self):
         try:
             plen = self._profile.shape[0]
@@ -203,12 +194,79 @@ class LineProfile(BaseROI):
             'class': self.__class__.__name__
         }
         return d
-    
-    def to_JSON(self):
-        import json
-        d = self.as_dict()
-        return json.dumps(d)
 
+
+class MultiaxisProfile(BaseROI):
+    """
+
+    Container for multi-axis line profiles. Used by stack_fitters, for e.g. lateral and axial profile fitting
+    keeping structure parameters of the fitted object equal for both.
+
+    All profiles should intersect, though in this first implementation it is not enforced.
+
+    """
+
+    def __init__(self, profiles=(), positions=(), widths=(), identifier=None, image_name=None):
+        """
+
+        Parameters
+        ----------
+
+        """
+        super(self.__class__, self).__init__(identifier=identifier, image_name=image_name)
+        self.data = (profiles, positions)
+        self._widths = widths
+
+    @property
+    def data(self):
+        return self.positions, self.profiles
+
+    @data.setter
+    def data(self, multiaxis_profiles):
+        positions, profiles = multiaxis_profiles
+        n_profiles = len(profiles)
+        assert len(positions) == n_profiles
+        self.n_profiles = n_profiles
+        self.positions = positions
+        self.profiles = profiles
+
+    @property
+    def widths(self):
+        return self._widths
+
+    @widths.setter
+    def widths(self, widths_px):
+        self._widths = [width for width in widths_px]  # keep widths as a list
+
+    @property
+    def profiles(self):
+        return self._profiles
+
+    @profiles.setter
+    def profiles(self, lines):
+        self._profiles = [line for line in lines]  # keep profiles as a list
+
+    @property
+    def positions(self):
+        return self._positions
+
+    @positions.setter
+    def positions(self, positions_nm):
+        self._positions = [pos for pos in positions_nm]
+
+    def as_dict(self):
+        positions, profiles = self.data
+        d = {
+            'image_name': self._image_name, 'identifier': self._id,
+            'class': self.__class__.__name__
+        }
+        for pi in range(len(positions)):
+            d['positions~%d' % pi] = np.asarray(positions[pi], dtype=float).tolist()
+            d['profiles~%d' % pi] = np.asarray(profiles[pi], dtype=float).tolist()
+
+        if self.widths:
+            d['widths'] = np.array(self.widths).tolist()
+        return d
 
 class RectangularROI(BaseROI):
     def __init__(self, r1=None, c1=None, r2=None, c2=None, slice=0, identifier=None, image_name=None, data=None,
@@ -284,6 +342,39 @@ class RectangularROI(BaseROI):
         }
         return d
 
+
+def partial_ensemble_class_factory(base_roi):
+    class PartialEnsembleMixIn(base_roi):
+        def __init__(self, parameter_exchanges=None, *args):
+            """
+
+            Parameters
+            ----------
+            parameter_exchanges: list
+                list of tuples, (standard name, replacement name), e.g. [('diameter', 'diameter~11')]. Note that
+                replacement names should start with the standard name followed by a '~'
+
+            """
+            base_roi.__init__(self, *args)
+            self._parameter_exchanges = parameter_exchanges
+
+        @property
+        def parameter_exchanges(self):
+            """
+
+            Returns
+            -------
+            parameter_exchanges: list
+                list of tuples, (standard name, replacement name), e.g. [('diameter', 'diameter~11')]. Note that
+                replacement names should start with the standard name followed by a '~'
+            """
+            return self._parameter_exchanges
+
+        @parameter_exchanges.setter
+        def parameter_exchanges(self, exchanges):
+            self._parameter_exchanges = [pex for pex in exchanges]
+
+    return PartialEnsembleMixIn
 
 module_lookup = {
     'LineProfile': 'PYME.DSView.modules.roiExtraction',

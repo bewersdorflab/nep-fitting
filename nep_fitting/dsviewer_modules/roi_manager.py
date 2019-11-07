@@ -69,7 +69,7 @@ class RegionManager:
 
         relabel_btn = wx.Button(pan, -1, label='Relabel')
         btn_sizer.Add(relabel_btn, 0, wx.EXPAND)
-        relabel_btn.Bind(wx.EVT_BUTTON, lambda e: self._region_handler.relabel_line_profiles())
+        relabel_btn.Bind(wx.EVT_BUTTON, lambda e: self._region_handler.relabel())
 
         fit_btn = wx.Button(pan, -1, label='Fit')
         btn_sizer.Add(fit_btn, 0, wx.EXPAND)
