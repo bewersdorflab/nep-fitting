@@ -14,6 +14,41 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 def extract_multiaxis_profile(data, terp_px, src, dst, x_comp, y_comp, widths_px, pi, return_dictionary, root_dir):
+    """
+
+    Parameters
+    ----------
+    data: image.ImageStack
+        data stack to extract profiles from
+    terp_px: 3D interpolation
+        3D interpolation with x, y, z in units of pixels. E.g. scipy.interpolate.RegularGridInterpolator object. Must
+        have a __call__ method defined
+    src: 2-tuple of scalar
+        xy origin point of line profile to be extracted
+    dst: 2-tuple of scalar
+        xy termination point of line profile to be extracted
+    x_comp: float
+        fractional projection of profile on x axis
+    y_comp: float
+        fractional projection of profile on y axis
+    widths_px: int
+        width in pixels to average the line over, orthogonal to the principle( (usually long) axis of the profile
+    pi: int
+        profile index
+    return_dictionary: dict
+        dictionary to store extracted profiles, format {pi: MultiaxisProfile(...)}
+    root_dir: str
+        directory to save profile plots to
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    TODO - Will need to be further refactored.
+
+    """
     x_width_px, y_width_px, z_width_px = widths_px
     # just use pixel units
     # NOTE for scikits image, opposite xy convention is used than fiji / pyme
@@ -178,10 +213,10 @@ if __name__ == '__main__':
     #
     # plt.show()
 
-from PYME.IO.ragged import RaggedCache
+    from PYME.IO.ragged import RaggedCache
 
-rag = RaggedCache(handler.line_profiles)
+    rag = RaggedCache(handler.line_profiles)
 
-rag.to_hdf(os.path.join(root_dir, 'multiaxis-profiles-%dnm.hdf' % int(profile_width)), 'line_profiles')
-base_root = ''
-rag.to_hdf(os.path.join(base_dir, 'all-multiaxis-profiles-%dnm.hdf' % int(profile_width)), 'line_profiles', mode='a')
+    rag.to_hdf(os.path.join(root_dir, 'multiaxis-profiles-%dnm.hdf' % int(profile_width)), 'line_profiles')
+    base_root = ''
+    rag.to_hdf(os.path.join(base_dir, 'all-multiaxis-profiles-%dnm.hdf' % int(profile_width)), 'line_profiles', mode='a')
