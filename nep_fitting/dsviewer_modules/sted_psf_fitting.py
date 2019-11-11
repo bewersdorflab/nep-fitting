@@ -71,6 +71,29 @@ class LineProfilesOverlay:
                                identifier='line_profile_' + str(uuid.uuid4())[:8], image_name=self.image_name)  # len(self._line_profile_handler._line_profiles)+1)
             self._line_profile_handler.add_line_profile(line)
 
+    def _get_multiaxis_widths(self):
+        lateral_width = self._line_profile_handler.get_line_profile_width()
+        return lateral_width, int(lateral_width * self._image.mdh['voxelsize.x'] / self._image.mdh['voxelsize.z'])
+
+    def _interpolate_stack(self):
+        raise NotImplementedError
+
+    def _add_multiaxis(self, event=None):
+        from nep_fitting.core import multiaxis_extraction
+        if self._image.data.shape[2] == 1:
+            logger.error('Cannot extract multiaxis profile from 2D data')
+        trace = self._dsviewer.do.selection_trace
+
+        if len(trace) > 2:
+            interp_px = self._interpolate_stack()
+            widths_px = self._get_multiaxis_widths()
+            src = trace[0][0], trace[0][1]
+            dst = trace[-1][0], trace[-1][1]
+            # FIXME - currently only single color
+            maprof = multiaxis_extraction.extract_multiaxis_profile(self._image.data[:, :, :, 0], interp_px,
+                                                                    src, dst, widths_px, self._line_profile_handler.n)
+            self._line_profile_handler.add_line_profile(maprof)
+
     def generate_panel(self, _pnl):
         """
         This method generates the panel to control the parameters of the overlay.

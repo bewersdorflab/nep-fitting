@@ -8,12 +8,94 @@ from PYME.Acquire.Hardware.focus_locks.reflection_focus_lock import GaussFitter1
 from nep_fitting.core.handlers import LineProfileHandler
 from nep_fitting.core.rois import MultiaxisProfile
 import os
+import uuid
 import multiprocessing
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-def extract_multiaxis_profile(data, terp_px, src, dst, x_comp, y_comp, widths_px, pi, return_dictionary, root_dir):
+def extract_multiaxis_profile(data, terp_px, src, dst, widths_px, pi=None):
+    """
+
+    Parameters
+    ----------
+    Parameters
+    ----------
+    data: image.ImageStack
+        data stack to extract profiles from
+    terp_px: 3D interpolation
+        3D interpolation with x, y, z in units of pixels. E.g. scipy.interpolate.RegularGridInterpolator object. Must
+        have a __call__ method defined
+    src: 2-tuple of scalar
+        xy origin point of line profile to be extracted
+    dst: 2-tuple of scalar
+        xy termination point of line profile to be extracted
+    widths_px: int
+        width in pixels to average the line over, orthogonal to the principle( (usually long) axis of the profile
+    pi: int
+        [optional] profile identified / index
+
+
+    Returns
+    -------
+    maprof: MultiaxisProfile
+        multiaxis profile object with lateral and axial profiles
+
+    """
+    if not pi:
+        pi = int(uuid.uuid4()[:8])
+    x_width_px, y_width_px, z_width_px = widths_px
+    # just use pixel units
+    # NOTE for scikits image, opposite xy convention is used than fiji / pyme
+    xy_profile = profile_line(data.sum(axis=2).T, src, dst, linewidth=x_width_px)
+    # get peak position, in pixels, from start
+    peak1d = gauss1d.fit(np.arange(len(xy_profile)), xy_profile)[0][1]
+
+    x_comp = FIXME
+    y_comp = FIXME
+    x_peak = (peak1d * x_comp) + src[0]
+    y_peak = (peak1d * y_comp) + src[1]
+
+    # extract z profile, centering it on the peak, and skewing it base on the angle
+    xx_grid = np.arange(x_width_px) - 0.5 * (x_width_px - 1)
+    yy_grid = np.arange(y_width_px) - 0.5 * (y_width_px - 1)
+    # make grids more than 1 d
+    xx_grid, yy_grid = np.meshgrid(xx_grid, yy_grid)
+    # rotate and add offset
+
+    xx = xx_grid * x_comp - yy_grid * y_comp + x_peak
+    yy = xx_grid * y_comp + yy_grid * x_comp + y_peak
+
+    z_profile = np.zeros(data.shape[2])
+    for zi in zz:
+        z_profile[zi] = np.mean(terp_by_slice_px[zi](yy.ravel(), xx.ravel(), grid=False))
+
+    # fit to find focal plane of this profile
+    zpeak = int(gauss1d.fit(zz, z_profile)[0][1])
+    print('profile peak on slice %d' % zpeak)
+    mean_data = np.zeros((data.shape[0], data.shape[1]))
+    # fixme - this bit is hopelessly slow.
+    zsamples = zpeak + np.arange(z_width_px) - 0.5 * (z_width_px - 1)
+    for indx in range(data.shape[0]):
+        for indy in range(data.shape[1]):
+            mean_data[indx, indy] = np.mean([terp_px((indx, indy, zsamp)) for zsamp in zsamples])
+
+    # re-extract xy_profile
+    xy_profile = profile_line(mean_data.T, src, dst, linewidth=x_width_px)
+
+    xy_pos = pixel_size[0] * np.arange(len(xy_profile))
+    z_pos = zz * pixel_size[2]
+    plt.figure()
+    plt.scatter(xy_pos, xy_profile)
+    plt.scatter(z_pos, z_profile)
+    plt.savefig(os.path.join(root_dir, 'profile%d.pdf' % pi))
+    plt.clf()
+    return MultiaxisProfile(profiles=(xy_profile, z_profile),
+                               positions=(xy_pos, z_pos),
+                               widths=(x_width_px * pixel_size[0], z_width_px * pixel_size[2]),
+                               identifier=pi)
+
+def extract_multiaxis_profile_to_dict(data, terp_px, src, dst, x_comp, y_comp, widths_px, pi, return_dictionary, root_dir):
     """
 
     Parameters
