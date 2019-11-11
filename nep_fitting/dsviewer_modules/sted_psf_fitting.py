@@ -57,7 +57,7 @@ class LineProfilesOverlay:
 
         # add a gui panel to the window to control the values
         self._dsviewer.paneHooks.append(self.generate_panel)
-        LineProfileHandler.LIST_CHANGED_SIGNAL.connect(self._refresh) #FIXME - signals should be instance variables, not class variables
+        self._line_profile_handler.LIST_CHANGED_SIGNAL.connect(self._refresh)
 
     def _add_line(self, event=None):
         """
@@ -93,11 +93,19 @@ class LineProfilesOverlay:
         v_sizer.Add(h_sizer, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 2)
 
         btn_sizer = wx.GridSizer(rows=2, cols=2, hgap=3, vgap=2)
+
         add_btn = wx.Button(pan, -1, label='Add', style=wx.BU_EXACTFIT)
         add_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_TOOLBAR, (16,16)))
         add_btn.SetToolTipString('Add a profile corresponding to the current selection')
         btn_sizer.Add(add_btn, 0, wx.EXPAND)
         add_btn.Bind(wx.EVT_BUTTON, self._add_line)
+
+        add_multi_btn = wx.Button(pan, -1, label='Add Multi-Axis', style=wx.BU_EXACTFIT)
+        add_multi_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_TOOLBAR, (16, 16)))
+        add_multi_btn.SetToolTipString('Add a multi-axis profile corresponding to the current selection')
+        btn_sizer.Add(add_multi_btn, 0, wx.EXPAND)
+        add_multi_btn.Bind(wx.EVT_BUTTON, self._add_multiaxis)
+
         del_btn = wx.Button(pan, -1, label='Delete', style=wx.BU_EXACTFIT)
         del_btn.SetToolTipString('Delete the currently selected profile(s)')
         del_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_MINUS, wx.ART_TOOLBAR, (16,16)))
@@ -466,7 +474,7 @@ class LineProfileList(wx.ListCtrl):
 
         self.InsertColumn(0, "Profile", width=120)
         self.InsertColumn(1, "Visible", width=50)
-        LineProfileHandler.LIST_CHANGED_SIGNAL.connect(self._update_list)
+        self._line_profile_handler.LIST_CHANGED_SIGNAL.connect(self._update_list)
 
     def _update_list(self, sender=None, **kwargs):
         # relist all items in the gui
@@ -540,7 +548,7 @@ class LineProfileList(wx.ListCtrl):
 
 def Plug(dsviewer):
     dsviewer.lineProfileOverlayer = LineProfilesOverlay(dsviewer)
-    LineProfileHandler.LIST_CHANGED_SIGNAL.connect(log_event)
+    dsviewer.lineProfileOverlayer._line_profile_handler.LIST_CHANGED_SIGNAL.connect(log_event)
 
 def Unplug(dsviewer):
     dsviewer.lineProfileOverlayer.Unplug()
