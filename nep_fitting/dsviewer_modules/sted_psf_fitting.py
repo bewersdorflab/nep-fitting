@@ -123,11 +123,11 @@ class LineProfilesOverlay:
         btn_sizer.Add(add_btn, 0, wx.EXPAND)
         add_btn.Bind(wx.EVT_BUTTON, self._add_line)
 
-        add_multi_btn = wx.Button(pan, -1, label='Add Multi-Axis', style=wx.BU_EXACTFIT)
-        add_multi_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_TOOLBAR, (16, 16)))
-        add_multi_btn.SetToolTipString('Add a multi-axis profile corresponding to the current selection')
-        btn_sizer.Add(add_multi_btn, 0, wx.EXPAND)
-        add_multi_btn.Bind(wx.EVT_BUTTON, self._add_multiaxis)
+        # add_multi_btn = wx.Button(pan, -1, label='Add Multi-Axis', style=wx.BU_EXACTFIT)
+        # add_multi_btn.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_TOOLBAR, (16, 16)))
+        # add_multi_btn.SetToolTipString('Add a multi-axis profile corresponding to the current selection')
+        # btn_sizer.Add(add_multi_btn, 0, wx.EXPAND)
+        # add_multi_btn.Bind(wx.EVT_BUTTON, self._add_multiaxis)
 
         del_btn = wx.Button(pan, -1, label='Delete', style=wx.BU_EXACTFIT)
         del_btn.SetToolTipString('Delete the currently selected profile(s)')
