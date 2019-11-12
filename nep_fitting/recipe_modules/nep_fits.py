@@ -13,7 +13,7 @@ from nep_fitting.core.handlers import LineProfileHandler, RegionHandler
 class TestEnsembleParameters(ModuleBase):
     inputName = Input('profiles')
 
-    fit_type = CStr(list(profile_fitters.fitters.keys())[0])
+    fit_type = CStr(list(profile_fitters.ensemble_fitters.keys())[0])
     ensemble_test_values = DictStrList({'psf_fwhm': [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]})
 
     outputName = Output('fit_results')
@@ -31,7 +31,7 @@ class TestEnsembleParameters(ModuleBase):
         fitter = fit_class(handler)
 
         results = fitter.ensemble_test(self.ensemble_test_values)
-        res = tabular.recArrayInput(results)
+        res = tabular.RecArraySource(results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
@@ -99,7 +99,7 @@ class EnsembleFitProfiles(ModuleBase):
         else:
             self.fitter.ensemble_fit(self.ensemble_parameter_guess)
 
-        res = tabular.recArrayInput(self.fitter.results)
+        res = tabular.RecArraySource(self.fitter.results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
@@ -158,7 +158,7 @@ class EnsembleFitProfiles(ModuleBase):
 class FitProfiles(ModuleBase):
     inputName = Input('profiles')
 
-    fit_type = CStr(list(profile_fitters.fitters.keys())[0])
+    fit_type = CStr(list(profile_fitters.non_ensemble_fitters.keys())[0])
 
     outputName = Output('fit_results')
 
@@ -171,12 +171,12 @@ class FitProfiles(ModuleBase):
         handler = LineProfileHandler()
         handler._load_profiles_from_list(inp)
 
-        fit_class = profile_fitters.fitters[self.fit_type]
+        fit_class = profile_fitters.non_ensemble_fitters[self.fit_type]
         self.fitter = fit_class(handler)
 
         self.fitter.fit_profiles()
 
-        res = tabular.recArrayInput(self.fitter.results)
+        res = tabular.RecArraySource(self.fitter.results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
@@ -187,7 +187,7 @@ class FitProfiles(ModuleBase):
 
     @property
     def _fitter_choices(self):
-        return list(profile_fitters.fitters.keys())
+        return list(profile_fitters.non_ensemble_fitters.keys())
 
 
     @property
@@ -237,7 +237,7 @@ class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved so
         else:
             fitter.ensemble_fit(self.ensemble_parameter_guess)
 
-        res = tabular.recArrayInput(fitter.results)
+        res = tabular.RecArraySource(fitter.results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
