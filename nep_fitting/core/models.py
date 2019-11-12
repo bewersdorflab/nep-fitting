@@ -145,7 +145,7 @@ def gauss_convolved_tubule_lumen_approx_tilt(p, distance, psf_fwhm):
 def lorentz_convolved_tubule_surface_antibody(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
-    r_inner = 0.5 * d_inner
+    r_inner = abs(0.5 * d_inner)
     # 25 nm without antibodies, 60 nm with primary and secondary, see 10.1073/pnas.75.4.1820
     r_outer = r_inner + 17.5  # [nm]
 
@@ -175,7 +175,7 @@ def gauss_convolved_tubule_surface_antibody_tilt(parameters, distance, psf_fwhm)
 def lorentz_convolved_tubule_surface_antibody_ne(parameters, distance):
     amp, d_inner, center, bkgnd, psf_fwhm = parameters
 
-    r_inner = 0.5 * d_inner
+    r_inner = abs(0.5 * d_inner)
     # 25 nm without antibodies, 60 nm with primary and secondary, see 10.1073/pnas.75.4.1820
     r_outer = r_inner + 17.5  # [nm]
 
@@ -209,7 +209,7 @@ def gauss_convolved_microtubule_antibody(parameters, distance, psf_fwhm):
 def lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd = parameters
 
-    r_inner = 0.5 * d_inner
+    r_inner = abs(0.5 * d_inner)
     # SNAP diameter ~ 3.6 nm, Halo diameter ~ 4.4 nm, size of Dyes themselves ~ 1 nm, so 4.5 nm offset
     r_outer = r_inner + 4.5  # [nm]
 
@@ -218,7 +218,7 @@ def lorentz_convolved_coated_tubule_selflabeling(parameters, distance, psf_fwhm)
 def lorentz_convolved_coated_tubule_selflabeling_tilt(parameters, distance, psf_fwhm):
     amp, d_inner, center, bkgnd, bx = parameters
 
-    r_inner = 0.5 * d_inner
+    r_inner = abs(0.5 * d_inner)
     # SNAP diameter ~ 3.6 nm, Halo diameter ~ 4.4 nm, size of Dyes themselves ~ 1 nm, so 4.5 nm offset
     r_outer = r_inner + 4.5  # [nm]
 
