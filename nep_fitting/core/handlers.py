@@ -62,8 +62,8 @@ class BaseHandler(object):
         if relabel:
             # sort self._line_profiles list according to visibility
             rois, visibilities = [], []
-            #self._line_profiles = [lp for (vis, lp) in sorted(zip(self.get_visibility_mask(), self._line_profiles), reverse=True)]
-            for (vis, roi) in sorted(zip(self.get_visibility_mask(), self._rois), reverse=True):
+            tie_breaker = range(len(self._rois))
+            for (vis, tb, roi) in sorted(zip(self.get_visibility_mask(), tie_breaker, self._rois), reverse=True):
                 rois.append(roi)
                 visibilities.append(vis)
 
@@ -178,9 +178,10 @@ class LineProfileHandler(BaseHandler):
                 profs = ragged.RaggedVLArray(hdf, t.name)
                 for i in range(len(profs)):# in profs[:]:
                     p = profs[i]
+                    identifier = str(i) if not p['identifier'] else p['identifier']
                     if p['class'] == 'LineProfile':
                         lp = rois.LineProfile(p['r1'], p['c1'], p['r2'], p['c2'], p['slice'], p['width'],
-                                              identifier=p['identifier'], image_name=p['image_name'])
+                                              identifier=identifier, image_name=p['image_name'])
                         lp.set_profile(p['profile'])
                         lp.set_distance(p['distance'])
                     else:  # p['class'] == 'MultiaxisProfile':
@@ -194,7 +195,7 @@ class LineProfileHandler(BaseHandler):
                         for pi in range(n_prof):
                             profiles.append(np.asarray(p['profiles~%d' % pi]))
                             positions.append(np.asarray(p['positions~%d' % pi]))
-                        lp = rois.MultiaxisProfile(profiles, positions, p['widths'], identifier=p['identifier'],
+                        lp = rois.MultiaxisProfile(profiles, positions, p['widths'], identifier=identifier,
                                                    image_name=p['image_name'])
 
                     self.add_line_profile(lp, False)
