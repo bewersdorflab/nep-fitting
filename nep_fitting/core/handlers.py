@@ -195,7 +195,7 @@ class LineProfileHandler(BaseHandler):
             if constant_slice is None:
                 try:
                     slice_val = roi['position'] - 1
-                except:
+                except KeyError:
                     slice_val = 0
             else:
                 slice_val = constant_slice
