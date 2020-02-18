@@ -189,9 +189,9 @@ class LineProfileHandler(BaseHandler):
         for key in imagej_rois.keys():
             roi = imagej_rois[key]
             # x, y transposed in Fiji/ImageJ
-            # TODO: Don't hardcode slice
+            # Position is 1-indexed in Fiji/ImageJ
             self._rois.append(rois.LineProfile(roi['y1'], roi['x1'],
-                              roi['y2'], roi['x2'], slice=0,
+                              roi['y2'], roi['x2'], slice=roi['position']-1,
                               width=roi['width'], identifier=roi['name'], 
                               image_name=self.image_name))
 
