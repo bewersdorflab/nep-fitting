@@ -164,6 +164,48 @@ class LineProfileHandler(BaseHandler):
             #except:
             #    pass
 
+    def _load_profiles_from_imagej(self, fn, zip_file=True, constant_slice=None):
+        """
+        Read line profiles from Fiji/ImageJ.
+
+        Parameters
+        ----------
+            fn : str
+                Filename containing line profiles.
+            zip_file : bool
+                Read profiles from zip file (default ImageJ output).
+            constant_slice : int
+                Set slice to a constant value. Useful if ImageJ 
+                output is inconsistent.
+        """
+        try:
+            import read_roi
+        except(ImportError):
+            raise ImportError('Please install the read_roi package (https://pypi.org/project/read-roi/).')
+
+        read_rois = read_roi.read_roi_zip
+        if not zip_file:
+            read_rois = read_roi.read_roi_file
+        
+        imagej_rois = read_rois(fn)
+
+        for key in imagej_rois.keys():
+            roi = imagej_rois[key]
+            # Check for a slice val
+            if constant_slice is None:
+                try:
+                    slice_val = roi['position'] - 1
+                except KeyError:
+                    slice_val = 0
+            else:
+                slice_val = constant_slice
+            # x, y transposed in Fiji/ImageJ
+            # Position is 1-indexed in Fiji/ImageJ
+            self._rois.append(rois.LineProfile(roi['y1'], roi['x1'],
+                              roi['y2'], roi['x2'], slice=slice_val,
+                              width=roi['width'], identifier=roi['name'], 
+                              image_name=self.image_name))
+
     def open_line_profiles(self, hdfFile, gui=True):
         import tables
         from PYME.IO import ragged
