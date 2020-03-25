@@ -469,14 +469,17 @@ class LineProfilesOverlay:
             self._line_profile_handler.save_line_profiles(fpath)
 
     def _on_load(self, event=None):
-        # TODO fill in this function
-        from PYME.IO.FileUtils import nameUtils
+        import os
         fdialog = wx.FileDialog(None, 'Load Line Profiles from ...',
-                                wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.FD_OPEN)
+                                wildcard='HDF5 Tables (*.hdf)|*.hdf| ImageJ roi (*.roi;*.zip)|*.roi;*.zip', style=wx.FD_OPEN)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
             fpath = fdialog.GetPath()
-            self._line_profile_handler.open_line_profiles(fpath)
+            ext = os.path.splitext(fpath)[-1]
+            if ext == '.roi' or ext == '.zip':
+                self._line_profile_handler._load_profiles_from_imagej(fpath)
+            else:
+                self._line_profile_handler.open_line_profiles(fpath)
 
     def Unplug(self):
         self._do.overlays.remove(self.DrawOverlays)

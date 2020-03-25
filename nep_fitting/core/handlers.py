@@ -164,7 +164,7 @@ class LineProfileHandler(BaseHandler):
             #except:
             #    pass
 
-    def _load_profiles_from_imagej(self, fn, zip_file=True, constant_slice=None):
+    def _load_profiles_from_imagej(self, fn, constant_slice=None, gui=True):
         """
         Read line profiles from Fiji/ImageJ.
 
@@ -172,22 +172,22 @@ class LineProfileHandler(BaseHandler):
         ----------
             fn : str
                 Filename containing line profiles.
-            zip_file : bool
-                Read profiles from zip file (default ImageJ output).
             constant_slice : int
                 Set slice to a constant value. Useful if ImageJ 
                 output is inconsistent.
+            gui: bool
+                flag to update names / send signals to update the gui profile list.
         """
+        import zipfile
         try:
             import read_roi
         except(ImportError):
             raise ImportError('Please install the read_roi package (https://pypi.org/project/read-roi/).')
-
-        read_rois = read_roi.read_roi_zip
-        if not zip_file:
-            read_rois = read_roi.read_roi_file
         
-        imagej_rois = read_rois(fn)
+        try:
+            imagej_rois = read_roi.read_roi_zip(fn)
+        except(zipfile.BadZipFile):
+            imagej_rois = read_roi.read_roi_file(fn)
 
         for key in imagej_rois.keys():
             roi = imagej_rois[key]
@@ -201,10 +201,12 @@ class LineProfileHandler(BaseHandler):
                 slice_val = constant_slice
             # x, y transposed in Fiji/ImageJ
             # Position is 1-indexed in Fiji/ImageJ
-            self._rois.append(rois.LineProfile(roi['y1'], roi['x1'],
-                              roi['y2'], roi['x2'], slice=slice_val,
-                              width=roi['width'], identifier=roi['name'], 
-                              image_name=self.image_name))
+            self.add_line_profile(rois.LineProfile(roi['y1'], roi['x1'], roi['y2'], roi['x2'], slice=slice_val,
+                                                   width=roi['width'], identifier=roi['name'],
+                                                   image_name=self.image_name), update=False)
+        if gui:
+            self.update_names(relabel=True)
+            self._on_list_changed()
 
     def open_line_profiles(self, hdfFile, gui=True):
         import tables
