@@ -164,7 +164,7 @@ class LineProfileHandler(BaseHandler):
             #except:
             #    pass
 
-    def _load_profiles_from_imagej(self, fn, zip_file=True, constant_slice=None):
+    def _load_profiles_from_imagej(self, fn, constant_slice=None):
         """
         Read line profiles from Fiji/ImageJ.
 
@@ -172,22 +172,20 @@ class LineProfileHandler(BaseHandler):
         ----------
             fn : str
                 Filename containing line profiles.
-            zip_file : bool
-                Read profiles from zip file (default ImageJ output).
             constant_slice : int
                 Set slice to a constant value. Useful if ImageJ 
                 output is inconsistent.
         """
+        import zipfile
         try:
             import read_roi
         except(ImportError):
             raise ImportError('Please install the read_roi package (https://pypi.org/project/read-roi/).')
-
-        read_rois = read_roi.read_roi_zip
-        if not zip_file:
-            read_rois = read_roi.read_roi_file
         
-        imagej_rois = read_rois(fn)
+        try:
+            imagej_rois = read_roi.read_roi_zip(fn)
+        except(zipfile.BadZipFile):
+            imagej_rois = read_roi.read_roi_file(fn)
 
         for key in imagej_rois.keys():
             roi = imagej_rois[key]
