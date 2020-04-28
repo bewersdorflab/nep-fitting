@@ -107,7 +107,7 @@ class LineProfile(BaseROI):
     recarrays and saves each profile as a separate table in the same hdf file.
     """
     
-    def __init__(self, r1=None, c1=None, r2=None, c2=None, slice=0, width=1.0, identifier=None, image_name=None,
+    def __init__(self, r1=None, c1=None, r2=None, c2=None, slice=0, width=1, identifier=None, image_name=None,
                  profile=None, distance=None):
         """
 
@@ -141,8 +141,8 @@ class LineProfile(BaseROI):
         self._c1 = int(c1) if c1 is not None else c1
         self._r2 = int(r2) if r2 is not None else r2
         self._c2 = int(c2) if c2 is not None else c2
-        self._slice = int(slice) if slice is not None else slice
-        self._width = width
+        self._slice = int(slice)
+        self._width = int(width)
         self.set_profile(profile)
         self.set_distance(distance)
     
