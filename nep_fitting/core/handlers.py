@@ -89,7 +89,7 @@ class LineProfileHandler(BaseHandler):
         self.image = image_data
         self.image_name = image_name
         self.interpolation_order = interpolation_order
-        self._width = 1.0
+        self._width = 1
         if self.image is not None:
             self.mdh = NestedClassMDHandler(self.image.mdh)
         else:

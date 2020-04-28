@@ -108,10 +108,10 @@ class LineProfilesOverlay:
         h_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         h_sizer.Add(wx.StaticText(pan, -1, 'Line width:'))
-        width_control = wx.TextCtrl(pan, -1, name='Line width',
-                                    value=str(self._line_profile_handler.get_line_profile_width()))
-        width_control.Bind(wx.EVT_KEY_UP, self._on_width_change)
-        h_sizer.Add(width_control, 1, wx.EXPAND, 0)
+        self.width_control = wx.TextCtrl(pan, -1, name='Line width',
+                                         value=str(self._line_profile_handler.get_line_profile_width()))
+        self.width_control.Bind(wx.EVT_KEY_UP, self._on_width_change)
+        h_sizer.Add(self.width_control, 1, wx.EXPAND, 0)
         h_sizer.Add(wx.StaticText(pan, -1, 'px'))
         v_sizer.Add(h_sizer, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 2)
 
@@ -274,13 +274,15 @@ class LineProfilesOverlay:
 
         value = event.EventObject.Value
         try:
-            float_value = float(value)
-            if float_value > 0.0:
-                self._line_profile_handler.set_line_profile_width(float_value)
+            # profile extraction takes an int, cast the GUI input and update the GUI to keep things in sync
+            value = int(float(value))
+            if value > 0:
+                self._line_profile_handler.set_line_profile_width(value)
+                self.width_control.SetValue(str(self._line_profile_handler.get_line_profile_width()))
+                self.width_control.Refresh()
                 self._refresh()
         except ValueError:
             pass
-        pass
 
     def _refresh(self, sender=None, **kwargs):
         """
