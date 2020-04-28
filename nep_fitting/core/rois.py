@@ -137,11 +137,11 @@ class LineProfile(BaseROI):
             being created from a previously saved profile
         """
         super(self.__class__, self).__init__(identifier=identifier, image_name=image_name)
-        self._r1 = r1
-        self._c1 = c1
-        self._r2 = r2
-        self._c2 = c2
-        self._slice = slice
+        self._r1 = int(r1) if r1 is not None else r1
+        self._c1 = int(c1) if c1 is not None else c1
+        self._r2 = int(r2) if r2 is not None else r2
+        self._c2 = int(c2) if c2 is not None else c2
+        self._slice = int(slice) if slice is not None else slice
         self._width = width
         self.set_profile(profile)
         self.set_distance(distance)
