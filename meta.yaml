@@ -117,7 +117,7 @@ requirements:
   # Package names should be any valid conda spec (see "Specifying versions
   # in requirements" below).
   run:
-    - python 2.7
+    - python
     - python-microscopy >=17.10.24
 
 
