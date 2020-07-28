@@ -59,4 +59,4 @@ We are currently having some packaging issues with PYME and nep-fitting. For the
 drop-down menu.
 
 ## Contact
-If something isn't working for you, you'd like to contribute, or have any questions about nep-fitting, please get in touch with us on the image.sc forum using the `pyme` tag.
+If something isn't working for you, you'd like to contribute, or have any questions about nep-fitting, please get in touch with us on the [image.sc](https://forum.image.sc/tag/pyme) forum using the `pyme` tag.
