@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(name='nep_fitting',
-      version='1.7',
+      version='1.8',
       description='Nested-loop Ensemble PSF fitting',
       author='Andrew Barentine, Michael Graff, David Baddeley',
       author_email='andrew.barentine@yale.edu',
