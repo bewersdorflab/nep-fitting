@@ -332,18 +332,18 @@ class LineProfilesOverlay:
             ensemble_params = e_res.dtype.names
             ensemble_results = {name: (e_res[name], res['ensemble_uncertainty'][0][name]) for name in ensemble_params}
 
-            fpath = fdialog.GetPath()
-
-            res.to_hdf(fpath, tablename='profile_fits') #table name changed to avoid conflicts with standard fit data
+            base_path = os.path.splitext(fdialog.GetPath())[0]
+            
+            res.to_hdf(base_path + '.hdf', tablename='profile_fits') #table name changed to avoid conflicts with standard fit data
 
             # plot individual profiles
             # fitter = profile_fitters.ensemble_fitters[fitting_module.fit_type](self._line_profile_handler)
             fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
-            profile_dir = os.path.splitext(fpath)[0] + '/'
+            profile_dir = base_path + '/'
             os.mkdir(profile_dir)
             fitter.plot_results(profile_dir)
 
-            htmlfn = os.path.splitext(fpath)[0] + '.html'
+            htmlfn = base_path + '.html'
             
             context = {'ensemble_results' : ensemble_results,
                        'results' : res,
@@ -399,7 +399,7 @@ class LineProfilesOverlay:
                                 defaultDir=nameUtils.genShiftFieldDirectoryPath())
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
-            fpath = fdialog.GetPath()
+            fpath = os.path.splitext(fdialog.GetPath())[0] + '.html'
             reports.generate_and_save(fpath, context, template_name='ensemble_test.html')
 
             webbrowser.open('file://' + fpath, 2)
@@ -430,16 +430,16 @@ class LineProfilesOverlay:
                                 defaultDir=nameUtils.genShiftFieldDirectoryPath())  # , defaultFile=defFile)
         succ = fdialog.ShowModal()
         if (succ == wx.ID_OK):
-            fpath = fdialog.GetPath()
+            base_path = os.path.splitext(fdialog.GetPath())[0]
 
-            res.to_hdf(fpath, tablename='profile_fits')  # table name changed to avoid conflicts with standard fit data
+            res.to_hdf(base_path + '.hdf', tablename='profile_fits')  # table name changed to avoid conflicts with standard fit data
 
             fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
-            profile_dir = os.path.splitext(fpath)[0] + '/'
+            profile_dir = base_path + '/'
             os.mkdir(profile_dir)
             fitter.plot_results(profile_dir)
 
-            htmlfn = os.path.splitext(fpath)[0] + '.html'
+            htmlfn = base_path + '.html'
 
             context = {'results': res,
                        'filename': self._dsviewer.image.filename,
