@@ -416,7 +416,8 @@ class LineProfilesOverlay:
         rec = ModuleCollection()
 
         rec.add_module(nep_fits.FitProfiles(rec, inputName='line_profiles',
-                                                   fit_type=list(profile_fitters.fitters.keys())[0], outputName='output'))
+                                            fit_type=list(profile_fitters.non_ensemble_fitters.keys())[0], 
+                                            outputName='output'))
 
         # populate namespace with current profiles
         rec.namespace['line_profiles'] = RaggedCache(self._line_profile_handler.get_line_profiles())
