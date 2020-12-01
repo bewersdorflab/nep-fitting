@@ -12,25 +12,6 @@ Once installed, nep-fitting is accessible in the PYME image viewer (dh5view) by 
 The plugin itself can be installed via conda (general use) or from source (use and software development).
 
 
-### Note - 2020/07
-
-We are currently having some packaging issues with PYME and nep-fitting. For the time being, users wishing for the simplest installation should install nep-fitting and PYME into a new environment:
-
-0.  Install python 3 [miniconda](https://docs.conda.io/en/latest/miniconda.html).
-
-1. Open a terminal/command prompt and run
-
-    `conda create -n nepfitting -c barentine nep-fitting=1.09`
-
-2. Activate the nepfitting conda environment
-
-    `conda activate nepfitting`
-
-3. Test the installation or use the plugin by running
-
-    `STEDFitter`
-
-
 ### Install using conda:
 
 0. You may want to make sure conda is up to date, e.g. `conda update conda` or `conda update -n <your environment name> conda`

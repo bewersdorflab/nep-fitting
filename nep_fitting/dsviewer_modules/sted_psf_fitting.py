@@ -28,7 +28,7 @@ from nep_fitting.core.handlers import LineProfileHandler
 from nep_fitting.core.rois import LineProfile
 from nep_fitting.core import profile_fitters
 import uuid
-
+import os
 import logging
 logger = logging.getLogger(__name__)
 
@@ -302,8 +302,6 @@ class LineProfilesOverlay:
         from nep_fitting import reports
         from PYME.IO.ragged import RaggedCache
         from PYME.IO.FileUtils import nameUtils
-        
-        import os
         import webbrowser
 
         rec = ModuleCollection()
@@ -409,7 +407,6 @@ class LineProfilesOverlay:
         from nep_fitting.recipe_modules import nep_fits
         from PYME.IO.ragged import RaggedCache
         from PYME.IO.FileUtils import nameUtils
-        import os
         import webbrowser
         from nep_fitting import reports
 
@@ -458,7 +455,6 @@ class LineProfilesOverlay:
 
     def _on_save(self, event=None):
         from PYME.IO.FileUtils import nameUtils
-        import os
         
         fdialog = wx.FileDialog(None, 'Save/Append Line Profiles to ...',
                                 wildcard='HDF5 Tables (*.hdf)|*.hdf', style=wx.FD_SAVE,
@@ -472,7 +468,6 @@ class LineProfilesOverlay:
             self._line_profile_handler.save_line_profiles(fpath)
 
     def _on_load(self, event=None):
-        import os
         fdialog = wx.FileDialog(None, 'Load Line Profiles from ...',
                                 wildcard='HDF5 Tables (*.hdf)|*.hdf| ImageJ roi (*.roi;*.zip)|*.roi;*.zip', style=wx.FD_OPEN)
         succ = fdialog.ShowModal()
