@@ -3,7 +3,7 @@ from skimage.measure import profile_line
 import numpy as np
 
 from PYME.IO.MetaDataHandler import NestedClassMDHandler
-import dispatch
+from PYME.contrib import dispatch
 
 from nep_fitting.core import rois
 
