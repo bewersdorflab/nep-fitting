@@ -65,7 +65,10 @@ class LineProfilesOverlay:
         This callback function is called, whenever a new line has been drawn using the selection tool
         and should be added
         """
-        trace = self._dsviewer.do.selection_trace
+        try:
+            trace = self._dsviewer.do.selection_trace
+        except AttributeError:  # PYME after 2022/11
+            trace = self._dsviewer.do.selection.trace
 
         if len(trace) > 2:
             line = LineProfile(trace[0][0], trace[0][1], trace[-1][0], trace[-1][1],
@@ -83,7 +86,10 @@ class LineProfilesOverlay:
         from nep_fitting.core import multiaxis_extraction
         if self._image.data.shape[2] == 1:
             logger.error('Cannot extract multiaxis profile from 2D data')
-        trace = self._dsviewer.do.selection_trace
+        try:
+            trace = self._dsviewer.do.selection_trace
+        except AttributeError:  # PYME after 2022/11
+            trace = self._dsviewer.do.selection.trace
 
         if len(trace) > 2:
             interp_px = self._interpolate_stack()
