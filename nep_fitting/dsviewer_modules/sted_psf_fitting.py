@@ -41,6 +41,7 @@ class LineProfilesOverlay:
     """
 
     def __init__(self, dsviewer):
+        # FIXME - hard references to dsviewer etc ... will create circular references, Use plugin interface instead
         self._dsviewer = dsviewer
         
         self._do = dsviewer.do
@@ -53,7 +54,7 @@ class LineProfilesOverlay:
         dsviewer.AddMenuItem('Profiles', "Draw line\tCtrl-L", self._add_line)
 
         # add this overlay to the overlays to be rendered
-        self._do.overlays.append(self.DrawOverlays)
+        self._view.add_overlay(self.DrawOverlays, 'NEP Profiles')
 
         # add a gui panel to the window to control the values
         self._dsviewer.paneHooks.append(self.generate_panel)
@@ -249,8 +250,8 @@ class LineProfilesOverlay:
         -------
 
         """
-        screen_coordinates_start = view._PixelToScreenCoordinates(*line.get_start())
-        screen_coordinates_end = view._PixelToScreenCoordinates(*line.get_end())
+        screen_coordinates_start = view.pixel_to_screen_coordinates(*line.get_start())
+        screen_coordinates_end = view.pixel_to_screen_coordinates(*line.get_end())
 
         dc.DrawLine(screen_coordinates_start[0],
                           screen_coordinates_start[1],

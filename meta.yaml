@@ -118,7 +118,7 @@ requirements:
   # in requirements" below).
   run:
     - python
-    - python-microscopy >=17.10.24
+    - python-microscopy >=21.11.23
     - scikit-image >=0.14.2  # TODO - remove once scikit-image is pinned appropriately in PYME
 
 

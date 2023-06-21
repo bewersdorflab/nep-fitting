@@ -17,6 +17,7 @@ class RegionManager:
     """
 
     def __init__(self, dsviewer):
+        # TODO - use plugin interface to avoid maintaining hard references (and creating circular refs) to dsviewer, the view, etc ...
         self._dsviewer = dsviewer
         self._view = dsviewer.view
         self._do = dsviewer.do
@@ -27,7 +28,7 @@ class RegionManager:
         self._region_handler = RegionHandler(self._image)
 
         # add this overlay to the overlays to be rendered
-        self._do.overlays.append(self.DrawOverlays)
+        self._view.add_overlay(self.DrawOverlays, 'NEP Regions')
 
         # add a gui panel to the window to control the values
         self._dsviewer.paneHooks.append(self.generate_panel)
@@ -140,8 +141,8 @@ class RegionManager:
 
         """
         # fixme - next bit only works for rectangular ROIs
-        screen_coordinates_start = self._view._PixelToScreenCoordinates(*roi.get_origin())
-        screen_coordinates_end = self._view._PixelToScreenCoordinates(*roi.get_second_corner())
+        screen_coordinates_start = self._view.pixel_to_screen_coordinates(*roi.get_origin())
+        screen_coordinates_end = self._view.pixel_to_screen_coordinates(*roi.get_second_corner())
 
         x = min([screen_coordinates_start[0], screen_coordinates_end[0]])
         y = min([screen_coordinates_start[1], screen_coordinates_end[1]])
@@ -173,7 +174,7 @@ class RegionManager:
 
             # draw lines again
             self._dc.SetPen(
-                wx.Pen(RegionManager.PEN_COLOR_LINE, self._view._PixelToScreenCoordinates(10, 0)[0]))
+                wx.Pen(RegionManager.PEN_COLOR_LINE, self._view.pixel_to_screen_coordinates(10, 0)[0]))
             self._dc.SetTextForeground(RegionManager.PEN_COLOR_LABEL)
             self._region_handler.update_names()
             for roi, visible in zip(self._region_handler.get_rois(),
