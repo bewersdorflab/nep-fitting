@@ -1,7 +1,6 @@
-from PYME.recipes.base import register_module, ModuleBase, Filter
-from PYME.recipes.traits import Input, Output, Float, Enum, CStr, Bool, Int, List, DictStrStr, DictStrList, ListFloat, ListStr
+from PYME.recipes.base import register_module, ModuleBase
+from PYME.recipes.traits import Input, Output, Float, CStr, Bool, DictStrList
 
-import numpy as np
 from PYME.IO import tabular
 from PYME.IO import MetaDataHandler
 
@@ -92,14 +91,14 @@ class EnsembleFitProfiles(ModuleBase):
         handler._load_profiles_from_list(inp)
 
         fit_class = profile_fitters.ensemble_fitters[self.fit_type]
-        self.fitter = fit_class(handler)
+        fitter = fit_class(handler)
 
         if self.hold_ensemble_parameter_constant:
-            self.fitter.fit_profiles(self.ensemble_parameter_guess)
+            fitter.fit_profiles(self.ensemble_parameter_guess)
         else:
-            self.fitter.ensemble_fit(self.ensemble_parameter_guess)
+            fitter.ensemble_fit(self.ensemble_parameter_guess)
 
-        res = tabular.RecArraySource(self.fitter.results)
+        res = tabular.RecArraySource(fitter.results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))
@@ -172,11 +171,11 @@ class FitProfiles(ModuleBase):
         handler._load_profiles_from_list(inp)
 
         fit_class = profile_fitters.non_ensemble_fitters[self.fit_type]
-        self.fitter = fit_class(handler)
+        fitter = fit_class(handler)
 
-        self.fitter.fit_profiles()
+        fitter.fit_profiles()
 
-        res = tabular.RecArraySource(self.fitter.results)
+        res = tabular.RecArraySource(fitter.results)
 
         # propagate metadata, if present
         res.mdh = MetaDataHandler.NestedClassMDHandler(getattr(inp, 'mdh', None))

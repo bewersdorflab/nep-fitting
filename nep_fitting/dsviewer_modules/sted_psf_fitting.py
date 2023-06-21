@@ -43,7 +43,7 @@ class LineProfilesOverlay:
     def __init__(self, dsviewer):
         # FIXME - hard references to dsviewer etc ... will create circular references, Use plugin interface instead
         self._dsviewer = dsviewer
-        
+        self._view = dsviewer.view
         self._do = dsviewer.do
         self._image = dsviewer.image
         filename = self._image.filename
@@ -65,7 +65,10 @@ class LineProfilesOverlay:
         This callback function is called, whenever a new line has been drawn using the selection tool
         and should be added
         """
-        trace = self._dsviewer.do.selection_trace
+        try:
+            trace = self._dsviewer.do.selection_trace
+        except AttributeError:  # PYME after 2022/11
+            trace = self._dsviewer.do.selection.trace
 
         if len(trace) > 2:
             line = LineProfile(trace[0][0], trace[0][1], trace[-1][0], trace[-1][1],
@@ -83,7 +86,10 @@ class LineProfilesOverlay:
         from nep_fitting.core import multiaxis_extraction
         if self._image.data.shape[2] == 1:
             logger.error('Cannot extract multiaxis profile from 2D data')
-        trace = self._dsviewer.do.selection_trace
+        try:
+            trace = self._dsviewer.do.selection_trace
+        except AttributeError:  # PYME after 2022/11
+            trace = self._dsviewer.do.selection.trace
 
         if len(trace) > 2:
             interp_px = self._interpolate_stack()
@@ -337,10 +343,10 @@ class LineProfilesOverlay:
 
             # plot individual profiles
             # fitter = profile_fitters.ensemble_fitters[fitting_module.fit_type](self._line_profile_handler)
-            fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
+            #  fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
             profile_dir = base_path + '/'
             os.mkdir(profile_dir)
-            fitter.plot_results(profile_dir)
+            #  fitter.plot_results(profile_dir)  # FIXME - need multi-plot output recipe module
 
             htmlfn = base_path + '.html'
             
@@ -433,10 +439,10 @@ class LineProfilesOverlay:
 
             res.to_hdf(base_path + '.hdf', tablename='profile_fits')  # table name changed to avoid conflicts with standard fit data
 
-            fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
+            # fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
             profile_dir = base_path + '/'
             os.mkdir(profile_dir)
-            fitter.plot_results(profile_dir)
+            # fitter.plot_results(profile_dir)
 
             htmlfn = base_path + '.html'
 
