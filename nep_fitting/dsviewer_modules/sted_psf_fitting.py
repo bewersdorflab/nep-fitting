@@ -343,10 +343,10 @@ class LineProfilesOverlay:
 
             # plot individual profiles
             # fitter = profile_fitters.ensemble_fitters[fitting_module.fit_type](self._line_profile_handler)
-            fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
+            #  fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
             profile_dir = base_path + '/'
             os.mkdir(profile_dir)
-            fitter.plot_results(profile_dir)
+            #  fitter.plot_results(profile_dir)  # FIXME - need multi-plot output recipe module
 
             htmlfn = base_path + '.html'
             
@@ -439,10 +439,10 @@ class LineProfilesOverlay:
 
             res.to_hdf(base_path + '.hdf', tablename='profile_fits')  # table name changed to avoid conflicts with standard fit data
 
-            fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
+            # fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
             profile_dir = base_path + '/'
             os.mkdir(profile_dir)
-            fitter.plot_results(profile_dir)
+            # fitter.plot_results(profile_dir)
 
             htmlfn = base_path + '.html'
 
