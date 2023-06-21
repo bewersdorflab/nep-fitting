@@ -43,7 +43,7 @@ class LineProfilesOverlay:
     def __init__(self, dsviewer):
         # FIXME - hard references to dsviewer etc ... will create circular references, Use plugin interface instead
         self._dsviewer = dsviewer
-        
+        self._view = dsviewer.view
         self._do = dsviewer.do
         self._image = dsviewer.image
         filename = self._image.filename
