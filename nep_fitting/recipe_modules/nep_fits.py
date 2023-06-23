@@ -160,6 +160,7 @@ class FitProfiles(ModuleBase):
     fit_type = CStr(list(profile_fitters.non_ensemble_fitters.keys())[0])
 
     outputName = Output('fit_results')
+    outputFitter = Output('fitter')
 
     def execute(self, namespace):
 
@@ -183,6 +184,7 @@ class FitProfiles(ModuleBase):
         res.mdh['FitProfiles.FitType'] = self.fit_type
 
         namespace[self.outputName] = res
+        namespace[self.outputFitter] = fitter
 
     @property
     def _fitter_choices(self):
@@ -218,6 +220,7 @@ class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved so
     hold_ensemble_parameter_constant = Bool(False)
 
     outputName = Output('fit_results')
+    outputFitter = Output('fitter')
 
     def execute(self, namespace):
 
@@ -246,6 +249,7 @@ class EnsembleFitROIs(ModuleBase):  # Note that this should probably be moved so
         res.mdh['EnsembleFitROIs.HoldEnsembleParamConstant'] = self.hold_ensemble_parameter_constant
 
         namespace[self.outputName] = res
+        namespace[self.outputFitter] = fitter
 
     @property
     def _fitter_choices(self):

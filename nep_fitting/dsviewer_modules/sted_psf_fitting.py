@@ -314,7 +314,7 @@ class LineProfilesOverlay:
         rec = ModuleCollection()
         fitting_module = nep_fits.EnsembleFitProfiles(rec, inputName='line_profiles',
                                                            fit_type=list(profile_fitters.ensemble_fitters.keys())[0],
-                                                           hold_ensemble_parameter_constant=False, outputName='output')
+                                                           hold_ensemble_parameter_constant=False, outputName='output', outputFitter='fitter')
         rec.add_module(fitting_module)
 
         # populate namespace with current profiles
@@ -344,9 +344,10 @@ class LineProfilesOverlay:
             # plot individual profiles
             # fitter = profile_fitters.ensemble_fitters[fitting_module.fit_type](self._line_profile_handler)
             #  fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
+            fitter = rec.namespace['fitter']
             profile_dir = base_path + '/'
             os.mkdir(profile_dir)
-            #  fitter.plot_results(profile_dir)  # FIXME - need multi-plot output recipe module
+            fitter.plot_results(profile_dir)  # FIXME - need multi-plot output recipe module
 
             htmlfn = base_path + '.html'
             
@@ -421,7 +422,7 @@ class LineProfilesOverlay:
 
         rec.add_module(nep_fits.FitProfiles(rec, inputName='line_profiles',
                                             fit_type=list(profile_fitters.non_ensemble_fitters.keys())[0], 
-                                            outputName='output'))
+                                            outputName='output', outputFitter='fitter'))
 
         # populate namespace with current profiles
         rec.namespace['line_profiles'] = RaggedCache(self._line_profile_handler.get_line_profiles())
@@ -439,10 +440,10 @@ class LineProfilesOverlay:
 
             res.to_hdf(base_path + '.hdf', tablename='profile_fits')  # table name changed to avoid conflicts with standard fit data
 
-            # fitter = rec.modules[0].fitter  # TODO - move plot_results out from class so we don't have to hack like this
+            fitter = rec.namespace['fitter']  # TODO - adjust naming
             profile_dir = base_path + '/'
             os.mkdir(profile_dir)
-            # fitter.plot_results(profile_dir)
+            fitter.plot_results(profile_dir)
 
             htmlfn = base_path + '.html'
 
