@@ -80,6 +80,7 @@ class EnsembleFitProfiles(ModuleBase):
     hold_ensemble_parameter_constant = Bool(False)
 
     outputName = Output('fit_results')
+    outputFitter = Output('fitter')
 
     def execute(self, namespace):
 
@@ -108,6 +109,7 @@ class EnsembleFitProfiles(ModuleBase):
         res.mdh['EnsembleFitProfiles.HoldEnsembleParamConstant'] = self.hold_ensemble_parameter_constant
 
         namespace[self.outputName] = res
+        namespace[self.outputFitter] = fitter
 
     @property
     def _fitter_choices(self):
